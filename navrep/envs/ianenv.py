@@ -41,7 +41,7 @@ class IANEnv(gym.Env):
         # constants
         self.COLLECT_TRAJECTORIES = collect_trajectories
         self.TEMPERATURE = 0.5
-        self.DT = 0.2  # should be the same as data rnn was trained with
+        self.DT = 0.1  # should be the same as data rnn was trained with
         # other tools
         self.viewer = None
         self.episode_statistics = DataFrame(
@@ -116,6 +116,8 @@ class IANEnv(gym.Env):
         return obs, reward, done, info
 
     def reset(self, set_scenario=None):
+        # print("RESETTING PARENT")
+        # raise Exception()
         try:
             self.iarlenv.rlenv.viewer.close()
         except AttributeError:
@@ -146,6 +148,7 @@ class IANEnv(gym.Env):
         args.naive_plan = True
         args.no_ros = True
         args.no_pass_through = True
+        args.dt = 0.1
         set_rl_scenario(args, scenario_name=set_scenario)  # pick a random scenario
         check_iaenv_args(args)
         self.iarlenv = IARLEnv(args, silent=silent)

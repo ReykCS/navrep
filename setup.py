@@ -15,13 +15,14 @@ setup(
               "navrep.envs",
               "navrep.models",
               "navrep.scripts",
+              "navrep.rosnav_models",
               # external modules bundled in here for convenience
               "frame_msgs",
               "frame_msgs.msg",
               "tf_bag"],
     # packages=["navrep"],
     ext_modules=cythonize("crings/crings.pyx", annotate=True),
-    python_requires='>=3.6, <3.7',
+    python_requires='>=3.6, <3.9',
     install_requires=[
         'numpy', 'matplotlib', 'Cython', 'rospkg', 'pyyaml', 'numba', 'ipython', 'flake8', 'pylint', 'rich',
         'tqdm',  # progress bar
@@ -29,6 +30,7 @@ setup(
         'stable-baselines==2.10.0', 'cloudpickle==1.6.0', # try 1.3.0 if fails to load older C models
         'torch==1.6.0', 'torchvision==0.3.0',  # used by CADRL, minGPT
         # 'tensorflow-gpu==1.13.2',
+        'gym==0.19.0',
         'tensorflow==1.13.2',
         'keras==2.3.1', 'catkin_pkg', # needed by deep_social_planner
         'pyIAN', 'asl-pepper-2d-sim', 'soadrl-crowdnav',

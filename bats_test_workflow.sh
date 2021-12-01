@@ -1,9 +1,9 @@
 #!/usr/bin/env bats
 
 @test "check that navrep folder is clean" {
-  [ -d "~/navrep/models" ]
-  [ -d "~/navrep/logs" ]
-  [ -d "~/navrep/eval" ]
+  [ -d "/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models" ]
+  [ -d "/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/logs" ]
+  [ -d "/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/eval" ]
 }
 
 @test "make vae dataset" {

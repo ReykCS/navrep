@@ -137,7 +137,7 @@ class NavRepTrainEnv(gym.Env):
         robotvel_in_baselink = apply_tf_to_vel(robotvel_in_world, world_in_baselink)
         goal_in_world = np.array([robot.gx, robot.gy, 0])
         goal_in_baselink = apply_tf_to_pose(goal_in_world, world_in_baselink)
-        robotstate_obs = np.hstack([goal_in_baselink[:2], robotvel_in_baselink])
+        robotstate_obs = np.hstack([goal_in_baselink[:2], robotvel_in_baselink, baselink_in_world])
         obs = (self.lidar_scan, robotstate_obs)
         return obs
 

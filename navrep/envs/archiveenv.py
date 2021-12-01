@@ -237,8 +237,8 @@ class ArchiveEncoder(EnvEncoder):
         assert backend == "VAE_LSTM"
         super(ArchiveEncoder, self).__init__(
             backend, encoding,
-            rnn_model_path=os.path.expanduser("~/navrep/models/M/navreptrainrnn.json"),
-            vae_model_path=os.path.expanduser("~/navrep/models/V/navreptrainvae.json"),
+            rnn_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/M/navreptrainrnn.json"),
+            vae_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/V/navreptrainvae.json"),
         )
 
 

@@ -1,12 +1,16 @@
-import os
+import os, sys
+from time import clock_getres
 import numpy as np
 from pyniel.python_tools.path_tools import make_dir_if_not_exists
 from stable_baselines.ppo2 import PPO2
-import rl_agent.common_custom_policies  # noqa
+
+# import rl_agent.common_custom_policies  # noqa
+
 
 from navrep.tools.commonargs import parse_common_args
 from navrep.envs.ianenv import IANEnv
 from navrep.scripts.cross_test_navreptrain_in_ianenv import run_test_episodes
+
 
 # constants. If you change these, think hard about what which assumptions break.
 _90 = 90  # guldenring downsampled scan size
@@ -15,17 +19,24 @@ _540 = 1080 // 2
 _8 = 8  # number of guldenrings waypoints
 
 class GuldenringCPolicy():
-    def __init__(self):
-        self.model = PPO2.load(os.path.expanduser(
-            "~/Code/drl_local_planner_ros_stable_baselines/example_agents/ppo2_1_raw_data_cont_0/ppo2_1_raw_data_cont_0.pkl"))  # noqa
+    def __init__(self, path=""):
+        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_gring/src/gring/example_agents/ppo2_1_raw_data_cont_0/ppo2_1_raw_data_cont_0.pkl"))  # noqa
 
     def act(self, obs):
         action, _state = self.model.predict(obs, deterministic=True)
         return action
 
 class GuldenringWrapperForIANEnv(IANEnv):
+    def __init__(self, path="", **kargs):
+        super().__init__(**kargs)
+        pass
+
     def _convert_obs(self, ianenv_obs):
-        scan, robotstate = ianenv_obs
+        # print(ianenv_obs)
+        scan = ianenv_obs[0]
+        robotstate = ianenv_obs[1]
+
+        # scan, robotstate, _ = ianenv_obs
         guldenring_obs = np.zeros((1, _90 + _8 * 2, 1))
         # rotate lidar scan so that first ray is at -pi
         rotated_scan = np.zeros_like(scan)
@@ -45,8 +56,11 @@ class GuldenringWrapperForIANEnv(IANEnv):
         return guldenring_obs
 
     def _convert_action(self, guldenring_action):
+        print(guldenring_action)
+
         vx, omega = guldenring_action
         ianenv_action = np.array([vx, 0., omega])
+        # ianenv_action = np.array([0.5, 0., 0.5])
         return ianenv_action
 
     def step(self, guldenring_action):

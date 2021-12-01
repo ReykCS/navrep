@@ -33,14 +33,14 @@ class EnvEncoder(object):
     look at EncodedEnv to see how it is typically used """
     def __init__(self,
                  backend, encoding,
-                 rnn_model_path=os.path.expanduser("~/navrep/models/M/rnn.json"),
-                 rnn1d_model_path=os.path.expanduser("~/navrep/models/M/rnn1d.json"),
-                 vae_model_path=os.path.expanduser("~/navrep/models/V/vae.json"),
-                 vae1d_model_path=os.path.expanduser("~/navrep/models/V/vae1d.json"),
-                 gpt_model_path=os.path.expanduser("~/navrep/models/W/gpt"),
-                 gpt1d_model_path=os.path.expanduser("~/navrep/models/W/gpt1d"),
-                 vae1dlstm_model_path=os.path.expanduser("~/navrep/models/W/vae1dlstm"),
-                 vaelstm_model_path=os.path.expanduser("~/navrep/models/W/vaelstm"),
+                 rnn_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/M/rnn.json"),
+                 rnn1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/M/rnn1d.json"),
+                 vae_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/V/vae.json"),
+                 vae1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/V/vae1d.json"),
+                 gpt_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/W/gpt"),
+                 gpt1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/W/gpt1d"),
+                 vae1dlstm_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/W/vae1dlstm"),
+                 vaelstm_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/navrep/models/W/vaelstm"),
                  gpu=False,
                  encoder_to_share_model_with=None,  # another EnvEncoder
                  ):

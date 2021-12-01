@@ -9,6 +9,7 @@ from navrep.envs.navreptrainencodedenv import NavRepTrainEncodedEnv, NavRepTrain
 from navrep.tools.sb_eval_callback import NavrepEvalCallback
 from navrep.tools.commonargs import parse_common_args
 
+
 if __name__ == "__main__":
     args, _ = parse_common_args()
 

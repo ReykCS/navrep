@@ -10,14 +10,14 @@ class NavRepTrainEncoder(EnvEncoder):
                  gpu=False, encoder_to_share_model_with=None):
         super(NavRepTrainEncoder, self).__init__(
             backend, encoding,
-            rnn_model_path=os.path.expanduser("~/navrep/models/M/navreptrainrnn.json"),
-            rnn1d_model_path=os.path.expanduser("~/navrep/models/M/navreptrainrnn1d.json"),
-            vae_model_path=os.path.expanduser("~/navrep/models/V/navreptrainvae.json"),
-            vae1d_model_path=os.path.expanduser("~/navrep/models/V/navreptrainvae1d.json"),
-            gpt_model_path=os.path.expanduser("~/navrep/models/W/navreptraingpt"),
-            gpt1d_model_path=os.path.expanduser("~/navrep/models/W/navreptraingpt1d"),
-            vae1dlstm_model_path=os.path.expanduser("~/navrep/models/W/navreptrainvae1dlstm"),
-            vaelstm_model_path=os.path.expanduser("~/navrep/models/W/navreptrainvaelstm"),
+            rnn_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/M/navreptrainrnn.json"),
+            rnn1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/M/navreptrainrnn1d.json"),
+            vae_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/V/navreptrainvae.json"),
+            vae1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/V/navreptrainvae1d.json"),
+            gpt_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/W/navreptraingpt"),
+            gpt1d_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/W/navreptraingpt1d"),
+            vae1dlstm_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/W/navreptrainvae1dlstm"),
+            vaelstm_model_path=os.path.expanduser("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/W/navreptrainvaelstm"),
             gpu=gpu,
             encoder_to_share_model_with=None,
         )
