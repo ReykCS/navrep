@@ -1,5 +1,5 @@
 from datetime import datetime
-import os
+import os, json
 from navrep.envs.rosnavtrainencodedenv import RosnavTrainEncodedEnv
 
 from stable_baselines3 import PPO
@@ -29,7 +29,8 @@ params = {
     "m_batch_size": 15,
     "n_epochs": 3,
     "clip_range": 0.22,
-    "normalize": True
+    "normalize": True,
+    "rule": "rule_02"
 }
 
 def load_vec_normalize(params: dict, model_path, env: VecEnv, eval_env: VecEnv):
@@ -67,8 +68,8 @@ if __name__ == "__main__":
     
     START_TIME = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
     
-    MODELPATH = os.path.join(DIR, "rosnav_" + START_TIME + "_ckpt")
-    MODELPATH2 = os.path.join(DIR, "rosnav_latest_PPO_ckpt")
+    MODELPATH = os.path.join(DIR, "rosnav_" + START_TIME + "_ckpt_" + params["rule"])
+    MODELPATH2 = os.path.join(DIR, "rosnav_latest_PPO_ckpt_" + params["rule"])
 
     if not os.path.exists(DIR):
         os.makedirs(DIR)
@@ -86,17 +87,17 @@ if __name__ == "__main__":
 
     env = DummyVecEnv(
         [
-            lambda: RosnavTrainEncodedEnv(scenario="train")
+            lambda: RosnavTrainEncodedEnv(scenario="train", reward_fnc=params["rule"])
         ] * N_ENVS
     )
 
     eval_env = DummyVecEnv(
         [
-            lambda: Monitor(RosnavTrainEncodedEnv(scenario="test"), EVALDIR, info_keywords=("done_reason", "is_success"))
+            lambda: Monitor(RosnavTrainEncodedEnv(scenario="test", reward_fnc=params["rule"]), EVALDIR, info_keywords=("done_reason", "is_success"))
         ]
     )
 
-    env, eval_env = load_vec_normalize(params, "MODELPATH", env, eval_env)
+    # env, eval_env = load_vec_normalize(params, "MODELPATH", env, eval_env)
     
     ### Stop training on reward threshhold callback
     stop_training_cb = StopTrainingOnRewardThreshold(
@@ -135,12 +136,17 @@ if __name__ == "__main__":
         verbose=1,
     )
 
-    model.learn(total_timesteps=TRAIN_STEPS+1, callback=eval_cb)
+    try:
+        model.learn(total_timesteps=TRAIN_STEPS+1, callback=eval_cb)
+    except KeyboardInterrupt:
+        pass
 
-    obs = env.reset()
+        
+    with open(MODELPATH + "/hyperparams.json", "a") as fp:
+        json.dump(params, fp)
 
-    model.save(MODELPATH)
-    model.save(MODELPATH2)
+    #model.save(MODELPATH)
+    #model.save(MODELPATH2)
     print("Model '{}' saved".format(MODELPATH))
 
     del model

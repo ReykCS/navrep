@@ -27,7 +27,7 @@ sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_pla
 _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_11_30__21_56_03_ckpt"): 
+    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_01__20_34_29_ckpt_rule_02"): 
         self.model = PPO.load(path + "/best_model")  # noqa
         print(self.model.observation_space.shape)
 
@@ -49,7 +49,7 @@ def get_goal_pose_in_robot_frame(goal):
     return rho, theta
 
 class RosnavWrapperForIANEnv(IANEnv):
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_11_30__21_56_03_ckpt", **kwargs):
+    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_01__20_34_29_ckpt_rule_02", **kwargs):
         super().__init__(**kwargs)
 
         vec_path = path + "/vec_normalize.pkl"
@@ -61,14 +61,16 @@ class RosnavWrapperForIANEnv(IANEnv):
             vec_normalize = pickle.load(file_handler)
 
         self._obs_norm_func = vec_normalize.normalize_obs
-        self.last_time = 0
-        self.last_obs = None
 
     def _convert_obs(self, ianenv_obs):
-
+        """
+            scan
+                1080 lidar values 
+            robotstate
+                (goal x [m], goal y [m], vx [m/s], vy [m/s], vth [rad/s]) - all in robot frame
+        """
         scan, robotstate = ianenv_obs
 
-        
         rho, theta = get_goal_pose_in_robot_frame(
             robotstate 
         )
@@ -76,17 +78,21 @@ class RosnavWrapperForIANEnv(IANEnv):
 
         rosnav_obs = np.zeros(360 + 2)
 
+        # Reshape the array of size 1080 to 360 and take the minimum of the merged values
         lidar_upsampling = _1080 // 360
         downsampled_scan = scan.reshape((-1, lidar_upsampling))
         downsampled_scan = np.min(downsampled_scan, axis=1)
+        
+        # Turtlebot laser range is only 3.5 meters
         rosnav_obs[:360] = [np.min([3.5, i]) for i in downsampled_scan]
+        
         self.last_rosnav_scan = rosnav_obs[:360]
 
-        rosnav_obs[360] = min([rho, 10])
+        rosnav_obs[360] = [rho, 10]
         rosnav_obs[361] = theta
 
+        # Normalize values
         rosnav_obs = self._obs_norm_func(rosnav_obs)
-
 
         return rosnav_obs
 
@@ -114,9 +120,6 @@ class RosnavWrapperForIANEnv(IANEnv):
         kwargs["lidar_scan_override"] = self.last_rosnav_scan
         return self.iarlenv.render(*args, **kwargs)
 
-
-
-
 if __name__ == '__main__':
     args, _ = parse_common_args()
 
@@ -126,7 +129,6 @@ if __name__ == '__main__':
 
     env = RosnavWrapperForIANEnv(silent=True, collect_trajectories=collect_trajectories)
     policy = RosnavCPolicy()
-
 
     S = run_test_episodes(env, policy, render=args.render, num_episodes=args.n)
 

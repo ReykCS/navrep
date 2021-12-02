@@ -11,7 +11,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
     outputs encoded obs (546) """
     def __init__(self, reward_fnc = "rule_02",
                  scenario='test', silent=False, adaptive=True,
-                 gpu=False, max_steps_per_episode=100):
+                 gpu=False, max_steps_per_episode=500):
 
         super(RosnavTrainEncodedEnv, self).__init__(scenario=scenario, silent=silent, adaptive=adaptive,
                                                     legacy_mode=False)
