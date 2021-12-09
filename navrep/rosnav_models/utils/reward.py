@@ -275,8 +275,9 @@ class RewardCalculator:
         :param punishment (float, optional): punishment when action can't be retrieved. defaults to 0.01
         :param consumption_factor (float, optional): weighted velocity punishment. defaults to 0.01
         """
-        if action is None:
+        if (action is None) or (action[0] == 0 and action[1] == 0):
             self.curr_reward -= punishment
+            reward = 0
         else:
             lin_vel = action[0]
             ang_vel = action[1]

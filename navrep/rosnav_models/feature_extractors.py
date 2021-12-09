@@ -13,23 +13,21 @@ _RS: Robot state size - placeholder for robot related inputs to the NN
 _L: Number of laser beams - placeholder for the laser beam data 
 """
 _RS = 2  # robot state size
+_L = None
 
-ROBOT_SETTING_PATH = "/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep"
-yaml_ROBOT_SETTING_PATH = os.path.join(
-    ROBOT_SETTING_PATH, "robot", "tb3.model.yaml"
-)
-
-with open(yaml_ROBOT_SETTING_PATH, "r") as fd:
-    robot_data = yaml.safe_load(fd)
-    for plugin in robot_data["plugins"]:
-        if plugin["type"] == "Laser":
-            laser_angle_min = plugin["angle"]["min"]
-            laser_angle_max = plugin["angle"]["max"]
-            laser_angle_increment = plugin["angle"]["increment"]
-            _L = int(
-                round((laser_angle_max - laser_angle_min) / laser_angle_increment) + 1
-            )  # num of laser beams
-            break
+def init(robot_path):
+    with open(robot_path, "r") as fd:
+        robot_data = yaml.safe_load(fd)
+        for plugin in robot_data["plugins"]:
+            if plugin["type"] == "Laser":
+                laser_angle_min = plugin["angle"]["min"]
+                laser_angle_max = plugin["angle"]["max"]
+                laser_angle_increment = plugin["angle"]["increment"]
+                global _L
+                _L = int(
+                    round((laser_angle_max - laser_angle_min) / laser_angle_increment) + 1
+                )  # num of laser beams
+                break
 
 
 class MLP_ARENA2D(nn.Module):

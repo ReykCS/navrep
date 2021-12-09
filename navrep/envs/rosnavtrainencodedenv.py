@@ -1,5 +1,6 @@
 from gym import spaces
 import numpy as np
+from scipy import interpolate
 import yaml
 
 from navrep.envs.navreptrainenv import NavRepTrainEnv
@@ -9,17 +10,19 @@ from navrep.rosnav_models.utils.reward import RewardCalculator
 class RosnavTrainEncodedEnv(NavRepTrainEnv):
     """ takes a (2) action as input
     outputs encoded obs (546) """
-    def __init__(self, reward_fnc = "rule_02",
+    def __init__(self, roboter_yaml_path, roboter="tb3", reward_fnc="rule_02",
                  scenario='test', silent=False, adaptive=True,
                  gpu=False, max_steps_per_episode=500):
 
         super(RosnavTrainEncodedEnv, self).__init__(scenario=scenario, silent=silent, adaptive=adaptive,
                                                     legacy_mode=False)
-        self.setup_by_configuration()
+        self.setup_by_configuration(roboter_yaml_path)
+
+        min, max = self._get_action_space(roboter)
 
         self.action_space = spaces.Box(
-            low=np.array([0, -2.7]),
-            high=np.array([0.3, 2.7]),
+            low=np.array(min),
+            high=np.array(max),
             dtype=np.float,
         )
 
@@ -51,18 +54,62 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
         self.last_observation = None
 
+        self.roboter = roboter
+
+    def _get_action_space(self, roboter):
+        if roboter == "ridgeback":
+            return [self.linear_range[0], 0, self.angular_range[0]], [self.linear_range[1], 0.5, self.angular_range[1]]
+
+        return [self.linear_range[0], self.angular_range[0]], [self.linear_range[1], self.angular_range[1]] 
+
+    def _get_action(self, action):
+        if self.roboter == "ridgeback":
+            return np.array(action)
+
+        return np.array([action[0], 0, action[1]])
+
+    def _get_observation_from_scan(self, obs):
+        if self.roboter == "tb3":
+            lidar_upsampling = 1080 // 360
+            downsampled_scan = obs.reshape((-1, lidar_upsampling))
+            downsampled_scan = np.min(downsampled_scan, axis=1)
+            lidar = [np.min([3.5, i]) for i in downsampled_scan]
+            return lidar
+        if self.roboter == "jackal" or self.roboter == "ridgeback":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(810)
+            downsampled[:405] = rotated_scan[135:540]
+            downsampled[405:] = rotated_scan[540:945]
+
+            f = interpolate.interp1d(np.arange(0, 810), downsampled)
+            return f(np.linspace(0.0, 810 - 1, 472))
+        if self.roboter == "agv":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(512)
+            downsampled[:256] = rotated_scan[256:512]
+            downsampled[256:] = rotated_scan[512:768]
+
+            f = interpolate.interp1d(np.arange(0, 512), downsampled)
+            return f(np.linspace(0.0, 512 - 1, 720))
+
     def step(self, action):
         self._steps_curr_episode += 1
 
-        action = np.array([action[0], 0, action[1]])
-        obs, reward, done, info = super(RosnavTrainEncodedEnv, self).step(action)
+        action_encoded = self._get_action(action)
+        obs, reward, done, info = super(RosnavTrainEncodedEnv, self).step(action_encoded)
 
         lidar, rho, theta = self._encode_obs(obs)
 
         reward, reward_info = self.reward_calculator.get_reward(
             np.array(lidar),
             (rho, theta),
-            action=np.array([action[0], action[2]]),
+            action=np.array([action_encoded[0], action_encoded[2]]),
             global_plan=None,
             robot_pose=None
         )
@@ -97,10 +144,12 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         scan, robotstate = obs
 
         # Downsample observation
-        lidar_upsampling = 1080 // 360
-        downsampled_scan = scan.reshape((-1, lidar_upsampling))
-        downsampled_scan = np.min(downsampled_scan, axis=1)
-        lidar = [np.min([3.5, i]) for i in downsampled_scan]
+        # lidar_upsampling = 1080 // 360
+        # downsampled_scan = scan.reshape((-1, lidar_upsampling))
+        # downsampled_scan = np.min(downsampled_scan, axis=1)
+        # lidar = [np.min([3.5, i]) for i in downsampled_scan]
+        lidar = self._get_observation_from_scan(scan)
+
         self.last_rosnav_scan = lidar
 
         rho, theta = self._get_goal_pose_in_robot_frame(robotstate[:2])
@@ -124,13 +173,14 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         return rho, theta
 
     def setup_by_configuration(
-        self, robot_yaml_path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/robot/tb3.model.yaml"
+        self, robot_yaml_path
     ):
         """get the configuration from the yaml file, including robot radius, discrete action space and continuous action space.
 
-        Args:
-            robot_yaml_path (str): [description]
+        Args:linear_range
+linear_ranger): [description]
         """
+        print(robot_yaml_path)
         with open(robot_yaml_path, "r") as fd:
             robot_data = yaml.safe_load(fd)
             # get robot radius
@@ -145,6 +195,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
                     laser_angle_min = plugin["angle"]["min"]
                     laser_angle_max = plugin["angle"]["max"]
                     laser_angle_increment = plugin["angle"]["increment"]
+                    self.laser_range = plugin["range"]
 
                     self._laser_num_beams = int(
                         round(
@@ -154,7 +205,10 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
                         + 1
                     )
                     self._laser_max_range = plugin["range"]
-    
+
+            self.linear_range = robot_data["robot"]["continuous_actions"]["linear_range"]
+            self.angular_range = robot_data["robot"]["continuous_actions"]["angular_range"]
+
     @staticmethod
     def _stack_spaces(ss):
         low = []

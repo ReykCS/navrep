@@ -27,7 +27,7 @@ sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_pla
 _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_01__20_34_29_ckpt_rule_02"): 
+    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_05__18_04_06_rule_01_AGENT_21"): 
         self.model = PPO.load(path + "/best_model")  # noqa
         print(self.model.observation_space.shape)
 
@@ -43,24 +43,21 @@ def get_goal_pose_in_robot_frame(goal):
         np.arctan2(y_relative, x_relative + 4 * np.pi)
     ) % (2 * np.pi) - np.pi
 
-    # norm_y = y_relative / rho
-    # theta = np.arccos(norm_y)
-
     return rho, theta
 
 class RosnavWrapperForIANEnv(IANEnv):
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_01__20_34_29_ckpt_rule_02", **kwargs):
+    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_05__17_25_33_rule_01_AGENT_21", **kwargs):
         super().__init__(**kwargs)
 
-        vec_path = path + "/vec_normalize.pkl"
-        assert os.path.isfile(
-            vec_path
-        ), f"VecNormalize file cannot be found at {vec_path}!"
+        # vec_path = path + "/vec_normalize.pkl"
+        # assert os.path.isfile(
+        #     vec_path
+        # ), f"VecNormalize file cannot be found at {vec_path}!"
 
-        with open(vec_path, "rb") as file_handler:
-            vec_normalize = pickle.load(file_handler)
+        # with open(vec_path, "rb") as file_handler:
+        #     vec_normalize = pickle.load(file_handler)
 
-        self._obs_norm_func = vec_normalize.normalize_obs
+        # self._obs_norm_func = vec_normalize.normalize_obs
 
     def _convert_obs(self, ianenv_obs):
         """
@@ -88,11 +85,11 @@ class RosnavWrapperForIANEnv(IANEnv):
         
         self.last_rosnav_scan = rosnav_obs[:360]
 
-        rosnav_obs[360] = [rho, 10]
+        rosnav_obs[360] = rho
         rosnav_obs[361] = theta
 
         # Normalize values
-        rosnav_obs = self._obs_norm_func(rosnav_obs)
+        # rosnav_obs = self._obs_norm_func(rosnav_obs)
 
         return rosnav_obs
 
