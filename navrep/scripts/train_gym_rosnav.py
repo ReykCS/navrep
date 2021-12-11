@@ -47,11 +47,13 @@ if __name__ == "__main__":
 
     for robot in roboter_models:
 
-        model_path = os.path.join(os.getcwd(), "robot", roboter_models[3] + ".model.yaml")
+        print("Training model", robot)
+
+        model_path = os.path.join(os.getcwd(), "robot", robot + ".model.yaml")
 
         init(model_path)
 
-        params["roboter"] = roboter_models[3]
+        params["roboter"] = robot
         params["interrupt"] = False
 
         DIR = os.path.join(os.getcwd(), "models/gym/rosnav")
@@ -65,7 +67,7 @@ if __name__ == "__main__":
         if len(args.load) == 0:
             START_TIME = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
         
-            MODELPATH = os.path.join(DIR, "rosnav_" + START_TIME + "_" + params["rule"] + "_" + params["agent_name"])
+            MODELPATH = os.path.join(DIR, "rosnav_" + START_TIME + "_" + params["rule"] + "_" + params["agent_name"] + "_" + params["roboter"])
 
             if not os.path.exists(DIR):
                 os.makedirs(DIR)
@@ -89,13 +91,13 @@ if __name__ == "__main__":
 
         env = SubprocVecEnv(
             [
-                lambda: RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="train", roboter=roboter_models[3], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"])
+                lambda: RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="train", roboter=params["roboter"], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"])
             ] * N_ENVS
         )
 
         eval_env = SubprocVecEnv(
             [
-                lambda: Monitor(RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="test", roboter=roboter_models[3], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"]), EVALDIR, info_keywords=("done_reason", "is_success"))
+                lambda: Monitor(RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="test", roboter=params["roboter"], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"]), EVALDIR, info_keywords=("done_reason", "is_success"))
             ]
         )
         

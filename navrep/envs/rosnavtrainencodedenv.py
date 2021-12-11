@@ -64,6 +64,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
     def _get_action(self, action):
         if self.roboter == "ridgeback":
+            print(action)
             return np.array(action)
 
         return np.array([action[0], 0, action[1]])
@@ -73,8 +74,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             lidar_upsampling = 1080 // 360
             downsampled_scan = obs.reshape((-1, lidar_upsampling))
             downsampled_scan = np.min(downsampled_scan, axis=1)
-            lidar = [np.min([3.5, i]) for i in downsampled_scan]
-            return lidar
+            return downsampled_scan
         if self.roboter == "jackal" or self.roboter == "ridgeback":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
@@ -85,7 +85,12 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             downsampled[405:] = rotated_scan[540:945]
 
             f = interpolate.interp1d(np.arange(0, 810), downsampled)
-            return f(np.linspace(0.0, 810 - 1, 472))
+            upsampled = f(np.linspace(0, 810 - 1, 944))
+
+            lidar = upsampled.reshape((-1, 2))
+            lidar = np.min(lidar, axis=1)
+
+            return lidar
         if self.roboter == "agv":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
@@ -143,12 +148,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
     def _encode_obs(self, obs):
         scan, robotstate = obs
 
-        # Downsample observation
-        # lidar_upsampling = 1080 // 360
-        # downsampled_scan = scan.reshape((-1, lidar_upsampling))
-        # downsampled_scan = np.min(downsampled_scan, axis=1)
-        # lidar = [np.min([3.5, i]) for i in downsampled_scan]
-        lidar = self._get_observation_from_scan(scan)
+        lidar = [np.min([self.laser_range, i]) for i in self._get_observation_from_scan(scan)]
 
         self.last_rosnav_scan = lidar
 
