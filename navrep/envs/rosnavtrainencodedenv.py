@@ -160,9 +160,10 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
     def render(self, mode="human", close=False, save_to_file=False,
                robocentric=False, render_decoded_scan=True):
-        super(RosnavTrainEncodedEnv, self).render(
-            mode=mode, close=close, lidar_scan_override=self.last_rosnav_scan, save_to_file=save_to_file,
-            robocentric=robocentric)
+        #super(RosnavTrainEncodedEnv, self).render(
+        #   mode=mode, close=close, lidar_scan_override=self.last_rosnav_scan, save_to_file=save_to_file,
+        #   robocentric=robocentric)
+        pass
 
     def _get_goal_pose_in_robot_frame(self, goal_pos):
         y_relative = goal_pos[1]

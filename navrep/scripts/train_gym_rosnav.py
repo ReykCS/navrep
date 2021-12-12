@@ -94,7 +94,8 @@ if __name__ == "__main__":
                     reward_fnc=params["rule"], 
                     max_steps_per_episode=params["max_episode_steps"]
                 )
-            ] * N_ENVS
+            ] * N_ENVS,
+            start_method="fork"
         )
 
         eval_env = SubprocVecEnv(
