@@ -18,6 +18,7 @@ def populate_common_args(parser):
                                  'VCARCH', 'CARCH'],
                         help="Picks which outputs from the world models to use")
     parser.add_argument('--n', type=int, help="for training, n_steps, for generation, n_sequences, etc..")
+    parser.add_argument('--envs', type=int, help="Number of environments to train in", default=6)
     parser.add_argument('--load', type=str, default="", help="Path to the model you want to load")
 
 def populate_multiproc_args(parser):

@@ -10,9 +10,9 @@ from navrep.rosnav_models.utils.reward import RewardCalculator
 class RosnavTrainEncodedEnv(NavRepTrainEnv):
     """ takes a (2) action as input
     outputs encoded obs (546) """
-    def __init__(self, roboter_yaml_path, roboter="tb3", reward_fnc="rule_02",
-                 scenario='test', silent=False, adaptive=True,
-                 gpu=False, max_steps_per_episode=500):
+    def __init__(self, roboter_yaml_path, roboter="tb3", 
+                    reward_fnc="rule_00", scenario='test', 
+                    silent=False, adaptive=True, max_steps_per_episode=500):
 
         super(RosnavTrainEncodedEnv, self).__init__(scenario=scenario, silent=silent, adaptive=adaptive,
                                                     legacy_mode=False)
@@ -64,7 +64,6 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
     def _get_action(self, action):
         if self.roboter == "ridgeback":
-            print(action)
             return np.array(action)
 
         return np.array([action[0], 0, action[1]])
@@ -96,12 +95,12 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             rotated_scan[:540] = obs[540:]
             rotated_scan[540:] = obs[:540]
 
-            downsampled = np.zeros(512)
-            downsampled[:256] = rotated_scan[256:512]
-            downsampled[256:] = rotated_scan[512:768]
+            downsampled = np.zeros(540)
+            downsampled[:270] = rotated_scan[270:540]
+            downsampled[270:] = rotated_scan[540:810]
 
-            f = interpolate.interp1d(np.arange(0, 512), downsampled)
-            return f(np.linspace(0.0, 512 - 1, 720))
+            f = interpolate.interp1d(np.arange(0, 540), downsampled)
+            return f(np.linspace(0.0, 540 - 1, 720))
 
     def step(self, action):
         self._steps_curr_episode += 1
@@ -177,7 +176,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
     ):
         """get the configuration from the yaml file, including robot radius, discrete action space and continuous action space.
 
-        Args:linear_range
+        Args: linear_range
 linear_ranger): [description]
         """
         print(robot_yaml_path)

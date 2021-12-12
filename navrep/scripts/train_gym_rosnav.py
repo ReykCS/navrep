@@ -60,10 +60,6 @@ if __name__ == "__main__":
         LOGDIR = os.path.join(os.getcwd(), "logs/gym/rosnav")
         EVALDIR = os.path.join(os.getcwd(), "logs/gym/rosnav/eval")
         
-        if args.dry_run:
-            DIR = "/tmp/navrep/models/gym/rosnav"
-            LOGDIR = "/tmp/navrep/logs/gym/rosnav"
-        
         if len(args.load) == 0:
             START_TIME = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
         
@@ -87,17 +83,33 @@ if __name__ == "__main__":
         if TRAIN_STEPS is None:
             TRAIN_STEPS = 40 * MILLION
 
-        N_ENVS = 6
+        N_ENVS = args.envs
 
         env = SubprocVecEnv(
             [
-                lambda: RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="train", roboter=params["roboter"], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"])
+                lambda: RosnavTrainEncodedEnv(
+                    roboter_yaml_path=model_path, 
+                    scenario="train", 
+                    roboter=params["roboter"], 
+                    reward_fnc=params["rule"], 
+                    max_steps_per_episode=params["max_episode_steps"]
+                )
             ] * N_ENVS
         )
 
         eval_env = SubprocVecEnv(
             [
-                lambda: Monitor(RosnavTrainEncodedEnv(roboter_yaml_path=model_path, scenario="test", roboter=params["roboter"], reward_fnc=params["rule"], max_steps_per_episode=params["max_episode_steps"]), EVALDIR, info_keywords=("done_reason", "is_success"))
+                lambda: Monitor(
+                    RosnavTrainEncodedEnv(
+                        roboter_yaml_path=model_path, 
+                        scenario="test", 
+                        roboter=params["roboter"], 
+                        reward_fnc=params["rule"], 
+                        max_steps_per_episode=params["max_episode_steps"]
+                    ), 
+                    EVALDIR, 
+                    info_keywords=("done_reason", "is_success")
+                )
             ]
         )
         
