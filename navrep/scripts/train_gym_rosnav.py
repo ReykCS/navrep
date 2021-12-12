@@ -4,7 +4,7 @@ from navrep.envs.rosnavtrainencodedenv import RosnavTrainEncodedEnv
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
+from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv, DummyVecEnv
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 from stable_baselines3.common.callbacks import (
     EvalCallback,
@@ -29,12 +29,12 @@ params = {
     "n_epochs": 3,
     "clip_range": 0.22,
     "normalize": True,
-    "max_episode_steps": 700,
+    "max_episode_steps": 1000,
     "agent_name": "AGENT_21",
     "timestep": 0.1,
     "rule": "rule_00",
     "n_eval_episodes": 100,
-    "eval_freq": 40000
+    "eval_freq": 50000
 }
 
 _L = None
@@ -93,8 +93,8 @@ if __name__ == "__main__":
                     roboter=params["roboter"], 
                     reward_fnc=params["rule"], 
                     max_steps_per_episode=params["max_episode_steps"]
-                )
-            ] * N_ENVS,
+                ) for _ in range(N_ENVS)
+            ],
             start_method="fork"
         )
 

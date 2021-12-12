@@ -117,15 +117,15 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             global_plan=None,
             robot_pose=None
         )
-        done = reward_info["is_done"]
+        done = reward_info["is_done"] or done
 
         observation = np.hstack([lidar, np.array([rho, theta])])
 
         info = {}
 
         if done:
-            info["done_reason"] = reward_info["done_reason"]
-            info["is_success"] = reward_info["is_success"]
+            info["done_reason"] = 1 # reward_info["done_reason"]
+            info["is_success"] = 1 #reward_info["is_success"]
 
         if self._steps_curr_episode > self._max_steps_per_episode:
             done = True
@@ -180,7 +180,6 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         Args: linear_range
 linear_ranger): [description]
         """
-        print(robot_yaml_path)
         with open(robot_yaml_path, "r") as fd:
             robot_data = yaml.safe_load(fd)
             # get robot radius
