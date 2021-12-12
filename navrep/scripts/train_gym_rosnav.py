@@ -4,7 +4,7 @@ from navrep.envs.rosnavtrainencodedenv import RosnavTrainEncodedEnv
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv
+from stable_baselines3.common.vec_env import VecNormalize, SubprocVecEnv, DummyVecEnv
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 from stable_baselines3.common.callbacks import (
     EvalCallback,
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             start_method="fork"
         )
 
-        eval_env = SubprocVecEnv(
+        eval_env = DummyVecEnv(
             [
                 lambda: Monitor(
                     RosnavTrainEncodedEnv(
