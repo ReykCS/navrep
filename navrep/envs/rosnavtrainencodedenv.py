@@ -34,7 +34,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
                     shape=(self._laser_num_beams,),
                     dtype=np.float32,
                 ),
-                spaces.Box(low=0, high=10, shape=(1,), dtype=np.float32),
+                spaces.Box(low=0, high=self.laser_range, shape=(1,), dtype=np.float32),
                 spaces.Box(
                     low=-np.pi, high=np.pi, shape=(1,), dtype=np.float32
                 ),
