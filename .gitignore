@@ -54,3 +54,5 @@ tags
 .vscode/
 
 python.lprof
+
+models/gym/rosnav/

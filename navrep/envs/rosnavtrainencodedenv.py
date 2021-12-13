@@ -117,7 +117,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             global_plan=None,
             robot_pose=None
         )
-        done = reward_info["is_done"] or done
+        done = reward_info["is_done"] # or done
 
         observation = np.hstack([lidar, np.array([rho, theta])])
 
