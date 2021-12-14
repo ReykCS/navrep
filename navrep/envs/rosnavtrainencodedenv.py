@@ -46,7 +46,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             safe_dist=1.6 * self._robot_radius,
             goal_radius=0.1,
             rule=reward_fnc,
-            extended_eval=False,
+            extended_eval=True,
         )
 
         self._steps_curr_episode = 0
@@ -117,15 +117,15 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             global_plan=None,
             robot_pose=None
         )
-        done = reward_info["is_done"] # or done
+        done = reward_info["is_done"]
 
         observation = np.hstack([lidar, np.array([rho, theta])])
 
         info = {}
 
         if done:
-            info["done_reason"] = 1 # reward_info["done_reason"]
-            info["is_success"] = 1 #reward_info["is_success"]
+            info["done_reason"] = reward_info["done_reason"]
+            info["is_success"] = reward_info["is_success"]
 
         if self._steps_curr_episode > self._max_steps_per_episode:
             done = True

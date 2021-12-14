@@ -27,7 +27,7 @@ sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_pla
 _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_12__18_59_48_rule_00_AGENT_21_tb3"): 
+    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_13__13_54_51_rule_00_AGENT_21_tb3"): 
         self.model = PPO.load(path + "/best_model")  # noqa
         print(self.model.observation_space.shape)
 
@@ -85,7 +85,7 @@ class RosnavWrapperForIANEnv(IANEnv):
         
         self.last_rosnav_scan = rosnav_obs[:360]
 
-        rosnav_obs[360] = rho
+        rosnav_obs[360] = np.min([rho, 10])
         rosnav_obs[361] = theta
 
         # Normalize values
