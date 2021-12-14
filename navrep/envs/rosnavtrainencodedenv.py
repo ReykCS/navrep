@@ -110,30 +110,30 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
         lidar, rho, theta = self._encode_obs(obs)
 
-        reward, reward_info = self.reward_calculator.get_reward(
-            np.array(lidar),
-            (rho, theta),
-            action=np.array([action_encoded[0], action_encoded[2]]),
-            global_plan=None,
-            robot_pose=None
-        )
-        done = reward_info["is_done"]
+        # reward, reward_info = self.reward_calculator.get_reward(
+        #     np.array(lidar),
+        #     (rho, theta),
+        #     action=np.array([action_encoded[0], action_encoded[2]]),
+        #     global_plan=None,
+        #     robot_pose=None
+        # )
+        # done = reward_info["is_done"]
 
         observation = np.hstack([lidar, np.array([rho, theta])])
 
         info = {}
 
-        if done:
-            info["done_reason"] = reward_info["done_reason"]
-            info["is_success"] = reward_info["is_success"]
+        # if done:
+        #     info["done_reason"] = reward_info["done_reason"]
+        #     info["is_success"] = reward_info["is_success"]
 
-        if self._steps_curr_episode > self._max_steps_per_episode:
-            done = True
-            info["done_reason"] = 0
-            info["is_success"] = 0
+        # if self._steps_curr_episode > self._max_steps_per_episode:
+        #     done = True
+        #     info["done_reason"] = 0
+        #     info["is_success"] = 0
 
-        if done:
-            observation = self.reset()
+        # if done:
+        #     observation = self.reset()
 
         return observation, reward, done, info
 

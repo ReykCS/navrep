@@ -20,7 +20,7 @@ from navrep.tools.commonargs import parse_common_args
 
 params = {
     "gamma": 0.99,
-    "n_steps": 600,
+    "n_steps": 1200,
     "ent_coef": 0.005,
     "learning_rate": 0.0003,
     "vf_coef": 0.22,

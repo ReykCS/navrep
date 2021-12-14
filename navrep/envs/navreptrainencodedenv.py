@@ -35,7 +35,10 @@ class NavRepTrainEncodedEnv(NavRepTrainEnv):
         self.encoder = encoder
         super(NavRepTrainEncodedEnv, self).__init__(scenario=scenario, silent=silent, adaptive=adaptive,
                                                     legacy_mode=False)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
+        if not self.encoder.action_space == None:
+            self.action_space = self.encoder.action_space
+        else:
+            self.action_space = spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
         self.observation_space = self.encoder.observation_space
 
     def step(self, action):

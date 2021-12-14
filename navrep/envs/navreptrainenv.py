@@ -109,7 +109,7 @@ class NavRepTrainEnv(gym.Env):
         robot = self.soadrl_sim.robot
         # lidar obs
         lidar_pos = np.array([robot.px, robot.py, robot.theta], dtype=np.float32)
-        ranges = np.ones((self.n_angles,), dtype=np.float32) * 25.
+        ranges = np.ones((self.n_angles,), dtype=np.float32) * 30.
         angles = np.linspace(self.kLidarMergedMinAngle,
                              self.kLidarMergedMaxAngle-self.kLidarAngleIncrement,
                              self.n_angles) + lidar_pos[2]
@@ -207,18 +207,18 @@ class NavRepTrainEnv(gym.Env):
                                             len(local_map)
                                             ) + self.soadrl_sim.robot.theta
         # add progress reward
-        # progress_reward = 0
-        # if not done:
-        #     if len(self.soadrl_sim.states) > 1:
-        #         new_s = self.soadrl_sim.states[-1][0]
-        #         old_s = self.soadrl_sim.states[-2][0]
-        #         new_p = np.array([new_s.px, new_s.py], dtype=np.double)
-        #         old_p = np.array([old_s.px, old_s.py], dtype=np.double)
-        #         goal = np.array([new_s.gx, new_s.gy], dtype=np.double)
-        #         progress_reward = PROGRESS_WEIGHT*(fast_2f_norm(old_p - goal) - fast_2f_norm(new_p - goal))
-        # reward = reward + progress_reward
-        # reward = reward * 100.
-        # self.episode_reward += reward
+        progress_reward = 0
+        if not done:
+            if len(self.soadrl_sim.states) > 1:
+                new_s = self.soadrl_sim.states[-1][0]
+                old_s = self.soadrl_sim.states[-2][0]
+                new_p = np.array([new_s.px, new_s.py], dtype=np.double)
+                old_p = np.array([old_s.px, old_s.py], dtype=np.double)
+                goal = np.array([new_s.gx, new_s.gy], dtype=np.double)
+                progress_reward = PROGRESS_WEIGHT*(fast_2f_norm(old_p - goal) - fast_2f_norm(new_p - goal))
+        reward = reward + progress_reward
+        reward = reward * 100.
+        self.episode_reward += reward
         # adaptive difficulty
         if done and self.adaptive and self.scenario == "train":
             if isinstance(info, ReachGoal):
@@ -269,7 +269,6 @@ class NavRepTrainEnv(gym.Env):
     def render(self, mode='human', close=False,
                RENDER_LIDAR=True, lidar_scan_override=None, goal_override=None, save_to_file=False,
                show_score=False, robocentric=False):
-        return
         if close:
             if self.viewer is not None:
                 self.viewer.close()
