@@ -84,8 +84,8 @@ def make_envs(
                     reward_fnc=params["rule"], 
                     max_steps_per_episode=params["max_episode_steps"]
                 ),
-                evaldir,
-                info_keywords=("done_reason", "is_success"),
+                evaldir
+                # info_keywords=("done_reason", "is_success"),
             )
         env.seed(seed + rank)
         return env
@@ -108,7 +108,6 @@ if __name__ == "__main__":
         params["interrupt"] = False
 
         DIR = os.path.join(os.getcwd(), "models/gym/rosnav")
-        LOGDIR = os.path.join(os.getcwd(), "logs/gym/rosnav")
         EVALDIR = os.path.join(os.getcwd(), "logs/gym/rosnav/eval")
         
         if len(args.load) == 0:
@@ -118,8 +117,6 @@ if __name__ == "__main__":
 
             if not os.path.exists(DIR):
                 os.makedirs(DIR)
-            if not os.path.exists(LOGDIR):
-                os.makedirs(LOGDIR)
             if not os.path.exists(EVALDIR):
                 os.makedirs(EVALDIR)
         else:
