@@ -20,7 +20,7 @@ from navrep.tools.commonargs import parse_common_args
 
 params = {
     "gamma": 0.99,
-    "n_steps": 1200,
+    "n_steps": 600,
     "ent_coef": 0.005,
     "learning_rate": 0.0003,
     "vf_coef": 0.22,
@@ -69,7 +69,7 @@ def make_envs(
             # train env
             env = RosnavTrainEncodedEnv(
                 roboter_yaml_path=model_path, 
-                scenario="train" if train == True else "test", 
+                scenario="train", 
                 roboter=params["roboter"], 
                 reward_fnc=params["rule"], 
                 max_steps_per_episode=params["max_episode_steps"]
@@ -79,7 +79,7 @@ def make_envs(
             env = Monitor(
                 RosnavTrainEncodedEnv(
                     roboter_yaml_path=model_path, 
-                    scenario="train" if train == True else "test", 
+                    scenario="test", 
                     roboter=params["roboter"], 
                     reward_fnc=params["rule"], 
                     max_steps_per_episode=params["max_episode_steps"]

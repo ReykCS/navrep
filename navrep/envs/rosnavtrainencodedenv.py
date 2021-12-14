@@ -132,6 +132,9 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
             info["done_reason"] = 0
             info["is_success"] = 0
 
+        if done:
+            observation = self.reset()
+
         return observation, reward, done, info
 
     def reset(self, *args, **kwargs):
