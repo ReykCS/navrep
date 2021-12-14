@@ -10,6 +10,7 @@ from stable_baselines3.common.callbacks import (
     EvalCallback,
     StopTrainingOnRewardThreshold,
 )
+from stable_baselines3.common.utils import set_random_seed
 
 from navrep.rosnav_models.agent_factory import AgentFactory
 from navrep.rosnav_models.custom_sb3_policy import *
@@ -41,6 +42,56 @@ _L = None
 
 roboter_models = ["tb3", "jackal", "ridgeback", "agv"]
 model_base_path = "./robot/"
+
+
+def make_envs(
+    rank,
+    params: dict,
+    seed: int = 0,
+    train: bool = True,
+    evaldir = ""
+):
+    """
+    Utility function for multiprocessed env
+
+    :param with_ns: (bool) if the system was initialized with namespaces
+    :param rank: (int) index of the subprocess
+    :param params: (dict) hyperparameters of agent to be trained
+    :param seed: (int) the inital seed for RNG
+    :param PATHS: (dict) script relevant paths
+    :param train: (bool) to differentiate between train and eval env
+    :param args: (Namespace) program arguments
+    :return: (Callable)
+    """
+
+    def _init():
+        if train:
+            # train env
+            env = RosnavTrainEncodedEnv(
+                roboter_yaml_path=model_path, 
+                scenario="train" if train == True else "test", 
+                roboter=params["roboter"], 
+                reward_fnc=params["rule"], 
+                max_steps_per_episode=params["max_episode_steps"]
+            )
+        else:
+            # eval env
+            env = Monitor(
+                RosnavTrainEncodedEnv(
+                    roboter_yaml_path=model_path, 
+                    scenario="train" if train == True else "test", 
+                    roboter=params["roboter"], 
+                    reward_fnc=params["rule"], 
+                    max_steps_per_episode=params["max_episode_steps"]
+                ),
+                evaldir,
+                info_keywords=("done_reason", "is_success"),
+            )
+        env.seed(seed + rank)
+        return env
+
+    set_random_seed(seed)
+    return _init
 
 if __name__ == "__main__":
     args, _ = parse_common_args()
@@ -87,30 +138,14 @@ if __name__ == "__main__":
 
         env = SubprocVecEnv(
             [
-                lambda: RosnavTrainEncodedEnv(
-                    roboter_yaml_path=model_path, 
-                    scenario="train", 
-                    roboter=params["roboter"], 
-                    reward_fnc=params["rule"], 
-                    max_steps_per_episode=params["max_episode_steps"]
-                ) for _ in range(N_ENVS)
+                make_envs(i, params) for i in range(N_ENVS)
             ],
             start_method="fork"
         )
 
         eval_env = SubprocVecEnv(
             [
-                lambda: Monitor(
-                    RosnavTrainEncodedEnv(
-                        roboter_yaml_path=model_path, 
-                        scenario="test", 
-                        roboter=params["roboter"], 
-                        reward_fnc=params["rule"], 
-                        max_steps_per_episode=params["max_episode_steps"]
-                    ), 
-                    EVALDIR, 
-                    info_keywords=("done_reason", "is_success")
-                )
+                make_envs(0, params, train=False, evaldir=EVALDIR)
             ]
         )
         
