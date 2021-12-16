@@ -131,7 +131,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
     def _encode_obs(self, obs):
         scan, robotstate = obs
 
-        lidar = [np.min([self.laser_range, i]) / self.laser_range for i in self._get_observation_from_scan(scan)]
+        lidar = [np.min([self.laser_range, i]) for i in self._get_observation_from_scan(scan)]
 
         self.last_rosnav_scan = lidar
 
@@ -154,7 +154,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         x_relative = goal_pos[0]
         rho = (x_relative ** 2 + y_relative ** 2) ** 0.5
         theta = (np.arctan2(y_relative, x_relative) + 4 * np.pi) % (2 * np.pi) - np.pi
-        return rho / self.laser_range, (theta + np.pi) / 2 * np.pi
+        return rho, theta
 
     def setup_by_configuration(
         self, robot_yaml_path
