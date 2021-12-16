@@ -33,54 +33,8 @@ params = {
     "eval_freq": 50000
 }
 
-_L = None
-
 roboter_models = ["tb3", "jackal", "ridgeback", "agv"]
 model_base_path = "./robot/"
-
-
-def make_envs(
-    rank,
-    params: dict,
-    seed: int = 0,
-    train: bool = True,
-    evaldir = ""
-):
-    """
-    Utility function for multiprocessed env
-
-    :param with_ns: (bool) if the system was initialized with namespaces
-    :param rank: (int) index of the subprocess
-    :param params: (dict) hyperparameters of agent to be trained
-    :param seed: (int) the inital seed for RNG
-    :param PATHS: (dict) script relevant paths
-    :param train: (bool) to differentiate between train and eval env
-    :param args: (Namespace) program arguments
-    :return: (Callable)
-    """
-
-    def _init():
-        if train:
-            # train env
-            env = RosnavTrainEncodedEnv(
-                roboter_yaml_path=model_path, 
-                scenario="train", 
-                roboter=params["roboter"], 
-                reward_fnc=params["rule"], 
-                max_steps_per_episode=params["max_episode_steps"]
-            )
-        else:
-            # eval env
-            env = RosnavTrainEncodedEnv(
-                    roboter_yaml_path=model_path, 
-                    scenario="test", 
-                    roboter=params["roboter"], 
-                    reward_fnc=params["rule"], 
-                    max_steps_per_episode=params["max_episode_steps"]
-                ),
-        return env
-
-    return _init
 
 if __name__ == "__main__":
     args, _ = parse_common_args()
@@ -90,8 +44,6 @@ if __name__ == "__main__":
         print("Training model", robot)
 
         model_path = os.path.join(os.getcwd(), "robot", robot + ".model.yaml")
-
-        init(model_path)
 
         params["roboter"] = robot
         params["interrupt"] = False
@@ -141,6 +93,7 @@ if __name__ == "__main__":
                 scenario="test", 
                 roboter=params["roboter"], 
             ),
+            n_eval_episodes=50,
             logpath=EVALDIR + "/model.csv", savepath=MODELPATH, verbose=1
         )
 

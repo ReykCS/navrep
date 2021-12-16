@@ -18,7 +18,7 @@ from crowd_nav.policy.network_om import SDOADRL
 from crowd_sim.envs.utils.action import ActionXYRot
 from crowd_sim.envs.utils.info import Collision, CollisionOtherAgent, ReachGoal
 
-PROGRESS_WEIGHT = 0.001
+PROGRESS_WEIGHT = 1
 
 class SDOADRLDummyPolicy(object):
     """ the minimum viable version of a tensorflow-less SDOADRLDummyPolicy which is
@@ -109,7 +109,7 @@ class NavRepTrainEnv(gym.Env):
         robot = self.soadrl_sim.robot
         # lidar obs
         lidar_pos = np.array([robot.px, robot.py, robot.theta], dtype=np.float32)
-        ranges = np.ones((self.n_angles,), dtype=np.float32) * 30.
+        ranges = np.ones((self.n_angles,), dtype=np.float32) * 25.
         angles = np.linspace(self.kLidarMergedMinAngle,
                              self.kLidarMergedMaxAngle-self.kLidarAngleIncrement,
                              self.n_angles) + lidar_pos[2]

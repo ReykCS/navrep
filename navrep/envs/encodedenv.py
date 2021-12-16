@@ -148,49 +148,6 @@ class EnvEncoder(object):
         # environment state variables
         self.reset()
 
-    def _get_action_space(self, roboter):
-        if roboter == "ridgeback":
-            return [self.linear_range[0], 0, self.angular_range[0]], [self.linear_range[1], 0.5, self.angular_range[1]]
-
-        return [self.linear_range[0], self.angular_range[0]], [self.linear_range[1], self.angular_range[1]] 
-
-
-    def setup_by_configuration(
-        self, robot_yaml_path
-    ):
-        """get the configuration from the yaml file, including robot radius, discrete action space and continuous action space.
-
-        Args: linear_range
-    linear_ranger): [description]
-        """
-        with open(robot_yaml_path, "r") as fd:
-            robot_data = yaml.safe_load(fd)
-            # get robot radius
-            for body in robot_data["bodies"]:
-                if body["name"] == "base_footprint":
-                    for footprint in body["footprints"]:
-                        if footprint["radius"]:
-                            self._robot_radius = footprint["radius"] * 1.05
-            # get laser related information
-            for plugin in robot_data["plugins"]:
-                if plugin["type"] == "Laser":
-                    laser_angle_min = plugin["angle"]["min"]
-                    laser_angle_max = plugin["angle"]["max"]
-                    laser_angle_increment = plugin["angle"]["increment"]
-                    self.laser_range = plugin["range"]
-
-                    self._laser_num_beams = int(
-                        round(
-                            (laser_angle_max - laser_angle_min)
-                            / laser_angle_increment
-                        )
-                        + 1
-                    )
-                    self._laser_max_range = plugin["range"]
-
-            self.linear_range = robot_data["robot"]["continuous_actions"]["linear_range"]
-            self.angular_range = robot_data["robot"]["continuous_actions"]["angular_range"]
-
     def reset(self):
         if self.encoding in ["VM", "M_ONLY"]:
             if self.backend in ["VAE_LSTM", "VAE1D_LSTM"]:
@@ -211,41 +168,6 @@ class EnvEncoder(object):
             rings_pred = obs_pred * self.rings_def["rings_to_bool"]
             decoded_scan = self.rings_def["rings_to_lidar"](rings_pred, _L).reshape((_L))
         return decoded_scan
-
-    def _get_observation_from_scan(self, obs):
-        if self.encoding == "tb3":
-            lidar_upsampling = 1080 // 360
-            downsampled_scan = obs.reshape((-1, lidar_upsampling))
-            downsampled_scan = np.min(downsampled_scan, axis=1)
-            return downsampled_scan
-        if self.encoding == "jackal" or self.encoding == "ridgeback":
-            rotated_scan = np.zeros_like(obs)
-            rotated_scan[:540] = obs[540:]
-            rotated_scan[540:] = obs[:540]
-
-            downsampled = np.zeros(810)
-            downsampled[:405] = rotated_scan[135:540]
-            downsampled[405:] = rotated_scan[540:945]
-
-            f = interpolate.interp1d(np.arange(0, 810), downsampled)
-            upsampled = f(np.linspace(0, 810 - 1, 944))
-
-            lidar = upsampled.reshape((-1, 2))
-            lidar = np.min(lidar, axis=1)
-
-            return lidar
-        if self.encoding == "agv":
-            rotated_scan = np.zeros_like(obs)
-            rotated_scan[:540] = obs[540:]
-            rotated_scan[540:] = obs[:540]
-
-            downsampled = np.zeros(540)
-            downsampled[:270] = rotated_scan[270:540]
-            downsampled[270:] = rotated_scan[540:810]
-
-            f = interpolate.interp1d(np.arange(0, 540), downsampled)
-            return f(np.linspace(0.0, 540 - 1, 720))
-
 
     def _encode_obs(self, obs, action):
         """

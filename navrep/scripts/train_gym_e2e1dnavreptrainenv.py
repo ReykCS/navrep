@@ -35,13 +35,13 @@ if __name__ == "__main__":
 
     N_ENVS = 6
     if args.debug:
-        env = DummyVecEnv([lambda: E2E1DNavRepEnv(silent=True, scenario='train')]*N_ENVS)
+        env = DummyVecEnv([lambda: E2E1DNavRepEnv(silent=True, scenario='train', collect_statistics=True)]*N_ENVS)
     else:
-        env = SubprocVecEnv([lambda: E2E1DNavRepEnv(silent=True, scenario='train')]*N_ENVS,
+        env = SubprocVecEnv([lambda: E2E1DNavRepEnv(silent=True, scenario='train', collect_statistics=True)]*N_ENVS,
                             start_method='spawn')
-    eval_env = E2E1DNavRepEnv(silent=True, scenario='train')
+    eval_env = E2E1DNavRepEnv(silent=True, scenario='train', collect_statistics=True)
     def test_env_fn():  # noqa
-        return E2E1DNavRepEnv(silent=True, scenario='test')
+        return E2E1DNavRepEnv(silent=True, scenario='test', collect_statistics=True)
     cb = NavrepEvalCallback(eval_env, test_env_fn=test_env_fn,
                             logpath=LOGPATH, savepath=MODELPATH, verbose=1)
     model = PPO2(Custom1DPolicy, env, verbose=0)

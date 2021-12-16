@@ -4,6 +4,7 @@ from scipy import interpolate
 import yaml
 
 from navrep.envs.navreptrainenv import NavRepTrainEnv
+from navrep.rosnav_models.utils.reward import RewardCalculator
 
 from navrep.rosnav_models.utils.reward import RewardCalculator
 
@@ -28,10 +29,18 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
 
         self.observation_space = spaces.Box(
                     low=0,
-                    high=1,
+                    high=np.inf,
                     shape=(self._laser_num_beams + 2,),
                     dtype=np.float32,
                 )
+
+        self.reward_calculator = RewardCalculator(
+            robot_radius=self._robot_radius,
+            safe_dist=1.6 * self._robot_radius,
+            goal_radius=0.1,
+            rule=reward_fnc,
+            extended_eval=True,
+        )
 
         self._steps_curr_episode = 0
         self._max_steps_per_episode = max_steps_per_episode
@@ -92,6 +101,7 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         action_encoded = self._get_action(action)
         obs, reward, done, info = super(RosnavTrainEncodedEnv, self).step(action_encoded)
 
+
         lidar, rho, theta = self._encode_obs(obs)
 
         # reward, reward_info = self.reward_calculator.get_reward(
@@ -101,6 +111,10 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         #     global_plan=None,
         #     robot_pose=None
         # )
+
+        # done = reward_info["is_done"]
+
+        print(reward)
         # done = reward_info["is_done"]
 
         observation = np.hstack([lidar, np.array([rho, theta])])
@@ -117,9 +131,10 @@ class RosnavTrainEncodedEnv(NavRepTrainEnv):
         # if done:
         #     observation = self.reset()
 
-        return observation, reward, done, info
+        return observation, 100, done, info
 
     def reset(self, *args, **kwargs):
+        self.reward_calculator.reset()
         self._steps_curr_episode = 0
 
         obs = super(RosnavTrainEncodedEnv, self).reset(*args, **kwargs)
