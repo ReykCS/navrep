@@ -20,7 +20,7 @@ _8 = 8  # number of guldenrings waypoints
 
 class Rosnav2CPolicy():
     def __init__(self, path=""):
-        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_15__21_10_49_rule_00_AGENT_21_tb3/newest"))  # noqa
+        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnavnavreptrainenv_2021_12_16__20_01_31_PPO_ROSNAV_VCARCH_C64_ckpt"))  # noqa
 
     def act(self, obs):
         action, _state = self.model.predict(obs, deterministic=True)
@@ -40,13 +40,13 @@ class Rosnav2WrapperForIANEnv(IANEnv):
         downsampled_scan = scan.reshape((-1, lidar_upsampling))
         downsampled_scan = np.min(downsampled_scan, axis=1)
 
-        lidar = [np.min([3.5, i]) for i in downsampled_scan]
+        lidar = [np.min([i, i]) for i in downsampled_scan]
 
         self.last_scan = downsampled_scan
 
         rho, theta = self._get_goal_pose_in_robot_frame(robotstate[:2])
 
-        return np.hstack([lidar, np.array([rho, theta])])
+        return np.hstack([lidar, np.array([rho, theta])]).reshape(362, 1)
 
     def _convert_action(self, guldenring_action):
         vx, omega = guldenring_action

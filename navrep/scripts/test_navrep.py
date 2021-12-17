@@ -23,18 +23,19 @@ class NavRepCPolicy(object):
         return action
 
 
-def run_test_episodes(env, policy, render=False, print_failure=True, num_episodes=500):
+def run_test_episodes(env, policy, render=False, print_failure=True, print_success=True, num_episodes=500):
     success_times = []
+    success_cases = []
     collision_times = []
     collision_other_agent_times = []
     timeout_times = []
     success = 0
     collision = 0
     collision_other_agent = 0
+    total_reward = 0
     timeout = 0
     too_close = 0
     min_dist = []
-    cumulative_rewards = []
     collision_cases = []
     collision_other_agent_cases = []
     timeout_cases = []
@@ -46,8 +47,9 @@ def run_test_episodes(env, policy, render=False, print_failure=True, num_episode
         env_time = 0
         while not done:
             action = policy.act(ob)
-            ob, _, done, info = env.step(action)
+            ob, reward, done, info = env.step(action)
             event = info['event']
+            total_reward += reward
             if render:
                 env.render('human')  # robocentric=True, save_to_file=True)
             env_time += env._get_dt()
@@ -58,6 +60,7 @@ def run_test_episodes(env, policy, render=False, print_failure=True, num_episode
         if isinstance(event, ReachGoal):
             success += 1
             success_times.append(env_time)
+            success_cases.append(i)
         elif isinstance(event, Collision):
             collision += 1
             collision_cases.append(i)
@@ -73,29 +76,37 @@ def run_test_episodes(env, policy, render=False, print_failure=True, num_episode
         else:
             raise ValueError('Invalid end signal from environment')
 
-    success_rate = success / float(num_episodes)
-    collision_rate = collision / float(num_episodes)
+    success_rate = success / float(num_episodes) * 100
+    timeout_rate = timeout / float(num_episodes) * 100
+    collision_rate = collision / float(num_episodes) * 100
     collision_other_agent_rate = collision_other_agent / \
-        float(num_episodes)
+        float(num_episodes) * 100
+
     assert success + collision + timeout + collision_other_agent == num_episodes
     avg_nav_time = sum(success_times) / float(len(success_times)
                                               ) if success_times else np.nan
 
     print(
-        """has success rate: {:.2f}, collision rate: {:.2f},
-        collision from other agents rate: {:.2f}, nav time: {:.2f}, total reward: {:.4f}""".format(
+        """has success rate: {:.2f}%, collision rate: {:.2f}%, timeout_rate: {:.2f}%, 
+        collision from other agents rate: {:.2f}%, nav time: {:.2f}, total reward: {:.4f}""".format(
             success_rate,
             collision_rate,
+            timeout_rate,
             collision_other_agent_rate,
             avg_nav_time,
-            np.mean(cumulative_rewards)
+            total_reward / float(num_episodes)
         )
     )
     total_time = sum(success_times + collision_times + collision_other_agent_times + timeout_times)
     print(
-        'Frequency of being in danger: %.2f and average min separate distance in danger: %.2f',
-        too_close / float(total_time),
-        np.mean(min_dist))
+        'Frequency of being in danger: {:.2f} and average min separate distance in danger: {:.2f}'.format(
+            too_close / float(total_time),
+            np.mean(min_dist)
+        )
+    )
+
+    if print_success:
+        print('Success cases: ' + ' '.join([str(x) for x in success_cases]))
 
     if print_failure:
         print('Collision cases: ' + ' '.join([str(x) for x in collision_cases]))

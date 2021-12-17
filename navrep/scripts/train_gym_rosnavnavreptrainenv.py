@@ -36,7 +36,7 @@ if __name__ == "__main__":
         MILLION = 1000000
         TRAIN_STEPS = args.n
         if TRAIN_STEPS is None:
-            TRAIN_STEPS = 100 * MILLION
+            TRAIN_STEPS = 60 * MILLION
 
         N_ENVS = args.envs
 

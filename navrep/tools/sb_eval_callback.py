@@ -68,7 +68,7 @@ class NavrepEvalCallback(BaseCallback):
     :param render: (bool) human rendering in the test env
     """
     def __init__(self, eval_env, test_env_fn=None,
-                 n_eval_episodes=20, logpath=None, savepath=None, eval_freq=50000, verbose=0,
+                 n_eval_episodes=50, logpath=None, savepath=None, eval_freq=50000, verbose=0,
                  render=False):
         super(NavrepEvalCallback, self).__init__(verbose)
         # self.model = None  # type: BaseRLModel
@@ -111,7 +111,7 @@ class NavrepEvalCallback(BaseCallback):
                         0,
                         avg_nav_time / test_env._get_dt(),
                         success_rate,
-                        success_rate * 100.,
+                        success_rate,
                         test_env.soadrl_sim.human_num,
                         test_env.soadrl_sim.num_walls,
                         time.time(),
@@ -156,6 +156,7 @@ def save_model_if_improved(new_avg_reward, best_avg_reward, model, savepath):
     if new_avg_reward > best_avg_reward[0]:
         best_avg_reward[0] = new_avg_reward
         if savepath is not None:
+            savepath = savepath + "_best_model"
             try:
                 model.save(savepath)
                 print("model saved to {} (avg reward: {}).".format(

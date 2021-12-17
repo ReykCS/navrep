@@ -112,7 +112,7 @@ class RosnavEncoder(object):
     def _encode_obs(self, obs):
         lidar, state = obs
 
-        new_lidar = self._get_observation_from_scan(lidar)
+        new_lidar = [np.min(self.laser_range, i) for i in self._get_observation_from_scan(lidar)]
         rho, theta = self._get_goal_pose_in_robot_frame(state[:2])
 
         obs = np.concatenate([new_lidar, [rho, theta]]).reshape(self._laser_num_beams + 2, 1)

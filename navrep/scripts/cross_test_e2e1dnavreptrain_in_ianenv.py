@@ -15,7 +15,7 @@ if args.n is None:
 collect_trajectories = False
 
 env = E2E1DIANEnv(silent=True, collect_trajectories=collect_trajectories)
-policy = E2E1DCPolicy()
+policy = E2E1DCPolicy(model_path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/e2enavreptrainenv_2020_10_27__09_10_06_PPO_E2E_VCARCH_C64_ckpt")
 
 S = run_test_episodes(env, policy, render=args.render, num_episodes=args.n)
 
