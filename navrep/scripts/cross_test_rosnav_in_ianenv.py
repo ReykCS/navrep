@@ -1,8 +1,10 @@
 import os, time
 import numpy as np
-import pickle
+import pickle, yaml
 from pyniel.python_tools.path_tools import make_dir_if_not_exists
-from stable_baselines3 import PPO
+# from stable_baselines3 import PPO
+from stable_baselines import PPO2
+from scipy import interpolate
 
 from datetime import datetime, timedelta
 
@@ -28,7 +30,7 @@ _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
     def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_13__13_54_51_rule_00_AGENT_21_tb3"): 
-        self.model = PPO.load(path + "/best_model")  # noqa
+        self.model = PPO2.load("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/newModels/" + path)  # noqa
         print(self.model.observation_space.shape)
 
     def act(self, obs):
@@ -46,18 +48,91 @@ def get_goal_pose_in_robot_frame(goal):
     return rho, theta
 
 class RosnavWrapperForIANEnv(IANEnv):
-    def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_05__17_25_33_rule_01_AGENT_21", **kwargs):
+    def __init__(self, encoder="tb3", path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_05__17_25_33_rule_01_AGENT_21", **kwargs):
         super().__init__(**kwargs)
+        self.encoder = encoder
 
-        # vec_path = path + "/vec_normalize.pkl"
-        # assert os.path.isfile(
-        #     vec_path
-        # ), f"VecNormalize file cannot be found at {vec_path}!"
+        self.setup_by_configuration()
 
-        # with open(vec_path, "rb") as file_handler:
-        #     vec_normalize = pickle.load(file_handler)
+    def setup_by_configuration(
+        self
+    ):
+        with open("robot/" + self.encoder + ".model.yaml", "r") as fd:
+            robot_data = yaml.safe_load(fd)
+            # get robot radius
+            for body in robot_data["bodies"]:
+                if body["name"] == "base_footprint":
+                    for footprint in body["footprints"]:
+                        if footprint["radius"]:
+                            self._robot_radius = footprint["radius"] * 1.05
+            # get laser related information
+            for plugin in robot_data["plugins"]:
+                if plugin["type"] == "Laser":
+                    laser_angle_min = plugin["angle"]["min"]
+                    laser_angle_max = plugin["angle"]["max"]
+                    laser_angle_increment = plugin["angle"]["increment"]
+                    self.laser_range = plugin["range"]
 
-        # self._obs_norm_func = vec_normalize.normalize_obs
+                    self._laser_num_beams = int(
+                        round(
+                            (laser_angle_max - laser_angle_min)
+                            / laser_angle_increment
+                        )
+                        + 1
+                    )
+                    self._laser_max_range = plugin["range"]
+
+            self.linear_range = robot_data["robot"]["continuous_actions"]["linear_range"]
+            self.angular_range = robot_data["robot"]["continuous_actions"]["angular_range"]
+
+    def _get_observation_from_scan(self, obs):
+        if self.encoder == "tb3":
+            lidar_upsampling = 1080 // 360
+            downsampled_scan = obs.reshape((-1, lidar_upsampling))
+            downsampled_scan = np.min(downsampled_scan, axis=1)
+            return downsampled_scan
+        if self.encoder == "jackal" or self.encoder == "ridgeback":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(810)
+            downsampled[:405] = rotated_scan[135:540]
+            downsampled[405:] = rotated_scan[540:945]
+
+            f = interpolate.interp1d(np.arange(0, 810), downsampled)
+            upsampled = f(np.linspace(0, 810 - 1, 944))
+
+            lidar = upsampled.reshape((-1, 2))
+            lidar = np.min(lidar, axis=1)
+
+            return lidar
+        if self.encoder == "agv":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(540)
+            downsampled[:270] = rotated_scan[270:540]
+            downsampled[270:] = rotated_scan[540:810]
+
+            f = interpolate.interp1d(np.arange(0, 540), downsampled)
+            return f(np.linspace(0.0, 540 - 1, 720))
+    
+    def _get_goal_pose_in_robot_frame(self, goal_pos):
+        x_relative, y_relative = goal_pos
+        rho = (x_relative ** 2 + y_relative ** 2) ** 0.5
+        theta = (np.arctan2(y_relative, x_relative) + 4 * np.pi) % (2 * np.pi) - np.pi
+        return rho, theta
+
+    def _encode_obs(self, obs):
+        lidar, state = obs
+
+        new_lidar = [np.min([self.laser_range, i]) for i in self._get_observation_from_scan(lidar)]
+        rho, theta = self._get_goal_pose_in_robot_frame(state[:2])
+
+        obs = np.concatenate([new_lidar, [rho, theta]]).reshape(self._laser_num_beams + 2, 1)
+        return obs
 
     def _convert_obs(self, ianenv_obs):
         """
@@ -66,37 +141,16 @@ class RosnavWrapperForIANEnv(IANEnv):
             robotstate
                 (goal x [m], goal y [m], vx [m/s], vy [m/s], vth [rad/s]) - all in robot frame
         """
-        scan, robotstate = ianenv_obs
+        return self._encode_obs(ianenv_obs)
 
-        rho, theta = get_goal_pose_in_robot_frame(
-            robotstate 
-        )
-        print(robotstate, rho, theta)
+    def _get_action(self, action):
+        if self.encoder == "ridgeback":
+            return np.array(action)
 
-        rosnav_obs = np.zeros(360 + 2)
-
-        # Reshape the array of size 1080 to 360 and take the minimum of the merged values
-        lidar_upsampling = _1080 // 360
-        downsampled_scan = scan.reshape((-1, lidar_upsampling))
-        downsampled_scan = np.min(downsampled_scan, axis=1)
-        
-        # Turtlebot laser range is only 3.5 meters
-        rosnav_obs[:360] = [np.min([3.5, i]) for i in downsampled_scan]
-        
-        self.last_rosnav_scan = rosnav_obs[:360]
-
-        rosnav_obs[360] = np.min([rho, 10])
-        rosnav_obs[361] = theta
-
-        # Normalize values
-        # rosnav_obs = self._obs_norm_func(rosnav_obs)
-
-        return rosnav_obs
+        return np.array([action[0], 0, action[1]])
 
     def _convert_action(self, rosnav_action):
-        vx, omega = rosnav_action
-        ianenv_action = np.array([vx, 0., omega])
-        return ianenv_action
+        return self._get_action(rosnav_action)
 
     def step(self, rosnav_action):
         ianenv_action = self._convert_action(rosnav_action)
@@ -111,11 +165,19 @@ class RosnavWrapperForIANEnv(IANEnv):
         return rosnav_obs
 
     def render(self, *args, **kwargs):
-        lidar_angles_downsampled = np.linspace(0, 2 * np.pi, 360) \
-            + self.iarlenv.rlenv.virtual_peppers[0].pos[2]
-        kwargs["lidar_angles_override"] = lidar_angles_downsampled
-        kwargs["lidar_scan_override"] = self.last_rosnav_scan
+        # lidar_angles_downsampled = np.linspace(0, 2 * np.pi, 360) \
+        #     + self.iarlenv.rlenv.virtual_peppers[0].pos[2]
+        # kwargs["lidar_angles_override"] = lidar_angles_downsampled
+        # kwargs["lidar_scan_override"] = self.last_rosnav_scan
         return self.iarlenv.render(*args, **kwargs)
+
+
+models_to_test = [
+    ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt", "tb3"],
+    ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt_best_model", "tb3"],
+    ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt", "jackal"],
+    ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt_best_model", "jackal"]
+]
 
 if __name__ == '__main__':
     args, _ = parse_common_args()
@@ -124,22 +186,27 @@ if __name__ == '__main__':
         args.n = 100
     collect_trajectories = False
 
-    env = RosnavWrapperForIANEnv(silent=True, collect_trajectories=collect_trajectories)
-    policy = RosnavCPolicy()
+    for model in models_to_test:
 
-    S = run_test_episodes(env, policy, render=args.render, num_episodes=args.n)
+        path, encoder = model
 
-    DIR = os.path.expanduser("~/navrep/eval/crosstest")
-    if args.dry_run:
-        DIR = "/tmp/navrep/eval/crosstest"
-    make_dir_if_not_exists(DIR)
+        print("Testing model", path)
 
-    if collect_trajectories:
-        NAME = "rosnav_in_ianenv_{}.pckl".format(len(S))
+        env = RosnavWrapperForIANEnv(encoder=encoder, silent=True, collect_trajectories=collect_trajectories)
+        policy = RosnavCPolicy(path=path)
+
+        S = run_test_episodes(env, policy, render=args.render, num_episodes=args.n)
+
+        DIR = os.path.expanduser("~/navrep/eval/crosstest")
+        if args.dry_run:
+            DIR = "/tmp/navrep/eval/crosstest"
+        make_dir_if_not_exists(DIR)
+
+        NAME = "{}_{}.pckl".format(path, len(S))
         PATH = os.path.join(DIR, NAME)
-        S.to_pickle(PATH)
-    else:
-        NAME = "rosnav_in_ianenv_{}.csv".format(len(S))
-        PATH = os.path.join(DIR, NAME)
-        S.to_csv(PATH)
-    print("{} written.".format(PATH))
+
+        if collect_trajectories:
+            S.to_pickle(PATH)
+        else:
+            S.to_csv(PATH)
+        print("{} written.".format(PATH))

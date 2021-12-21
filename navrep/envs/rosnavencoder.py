@@ -2,6 +2,7 @@ import numpy as np
 from gym import spaces
 import yaml
 from scipy import interpolate
+from navrep.envs.e2eenv import FlatLidarAndStateEncoder
 
 from navrep.tools.rings import generate_rings
 from navrep.envs.navreptrainenv import NavRepTrainEnv
@@ -133,13 +134,16 @@ class RosnavNavRepEnv(NavRepTrainEnv):
     """ takes a (2) action as input
     outputs encoded obs (1085) """
     def __init__(self, encoder="tb3", *args, **kwargs):
-        self.encoder = RosnavEncoder(encoder=encoder)
+        if encoder == "e2e":
+            self.encoder = FlatLidarAndStateEncoder()
+        else:
+            self.encoder = RosnavEncoder(encoder=encoder)
         super(RosnavNavRepEnv, self).__init__(*args, **kwargs)
         self.action_space = self.encoder.action_space
         self.observation_space = self.encoder.observation_space
 
     def step(self, action):
-        action = np.array([action[0], action[1], 0.])  # no rotation
+        action = self.encoder._get_action(action) # np.array([action[0], action[1], 0.])  # no rotation
         obs, reward, done, info = super(RosnavNavRepEnv, self).step(action)
         h = self.encoder._encode_obs(obs)
         return h, reward, done, info

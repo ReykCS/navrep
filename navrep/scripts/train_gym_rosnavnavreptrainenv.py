@@ -24,10 +24,10 @@ if __name__ == "__main__":
             DIR = "/tmp/navrep/models/gym"
             LOGDIR = "/tmp/navrep/logs/gym"
         START_TIME = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
-        LOGNAME = "rosnavnavreptrainenv_" + START_TIME + "_PPO" + "_ROSNAV_" + roboter
+        LOGNAME = "rosnavnavreptrainenv_" + START_TIME + "_PPO2" + "_ROSNAV_" + roboter
         LOGPATH = os.path.join(LOGDIR, LOGNAME + ".csv")
         MODELPATH = os.path.join(DIR, LOGNAME + "_ckpt")
-        MODELPATH2 = os.path.join(DIR, "rosnavnavreptrainenv_latest_PPO_ckpt_" + roboter)
+        MODELPATH2 = os.path.join(DIR, "rosnavnavreptrainenv_latest_PPO2_ckpt_" + roboter)
         if not os.path.exists(DIR):
             os.makedirs(DIR)
         if not os.path.exists(LOGDIR):

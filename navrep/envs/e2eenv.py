@@ -15,6 +15,7 @@ class FlatLidarAndStateEncoder(object):
         self._N = _L + _RS
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
                                             shape=(self._N,1), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
 
     def reset(self):
         pass
@@ -22,7 +23,10 @@ class FlatLidarAndStateEncoder(object):
     def close(self):
         pass
 
-    def _encode_obs(self, obs, action):
+    def _get_action(self, action):
+        return np.array([action[0], action[1], 0.])
+
+    def _encode_obs(self, obs):
         lidar, state = obs
         e2e_obs = np.concatenate([lidar, state[:5]]).reshape(self._N,1)
         return e2e_obs
@@ -62,13 +66,13 @@ class E2E1DNavRepEnv(NavRepTrainEnv):
     def step(self, action):
         action = np.array([action[0], action[1], 0.])  # no rotation
         obs, reward, done, info = super(E2E1DNavRepEnv, self).step(action)
-        h = self.encoder._encode_obs(obs, action)
+        h = self.encoder._encode_obs(obs)
         return h, reward, done, info
 
     def reset(self):
         self.encoder.reset()
         obs = super(E2E1DNavRepEnv, self).reset()
-        h = self.encoder._encode_obs(obs, np.array([0,0,0]))
+        h = self.encoder._encode_obs(obs)
         return h
 
 class E2ENavRepEnv(NavRepTrainEnv):
