@@ -56,7 +56,7 @@ class GuldenringWrapperForIANEnv(IANEnv):
         return guldenring_obs
 
     def _convert_action(self, guldenring_action):
-        print(guldenring_action)
+        # print(guldenring_action)
 
         vx, omega = guldenring_action
         ianenv_action = np.array([vx, 0., omega])
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     args, _ = parse_common_args()
 
     if args.n is None:
-        args.n = 1000
+        args.n = 100
     collect_trajectories = False
 
     env = GuldenringWrapperForIANEnv(silent=True, collect_trajectories=collect_trajectories)

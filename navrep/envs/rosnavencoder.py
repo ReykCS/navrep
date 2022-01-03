@@ -86,12 +86,7 @@ class RosnavEncoder(object):
             downsampled[405:] = rotated_scan[540:945]
 
             f = interpolate.interp1d(np.arange(0, 810), downsampled)
-            upsampled = f(np.linspace(0, 810 - 1, 944))
-
-            lidar = upsampled.reshape((-1, 2))
-            lidar = np.min(lidar, axis=1)
-
-            return lidar
+            return f(np.linspace(0, 810 - 1, 720))
         if self.encoder == "agv":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
