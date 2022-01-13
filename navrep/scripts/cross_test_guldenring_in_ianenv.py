@@ -20,7 +20,8 @@ _8 = 8  # number of guldenrings waypoints
 
 class GuldenringCPolicy():
     def __init__(self, path=""):
-        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_gring/src/gring/example_agents/ppo2_1_raw_data_cont_0/ppo2_1_raw_data_cont_0.pkl"))  # noqa
+        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/drl_local_planner_ros_stable_baselines/example_agents/ppo2_1_raw_data_cont_0/ppo2_1_raw_data_cont_0.pkl"))  # noqa
+        # self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_gring/src/gring/example_agents/ppo2_1_raw_data_cont_0/ppo2_1_raw_data_cont_0.pkl"))  # noqa
 
     def act(self, obs):
         action, _state = self.model.predict(obs, deterministic=True)
@@ -35,6 +36,8 @@ class GuldenringWrapperForIANEnv(IANEnv):
         # print(ianenv_obs)
         scan = ianenv_obs[0]
         robotstate = ianenv_obs[1]
+
+        print(robotstate[:2])
 
         # scan, robotstate, _ = ianenv_obs
         guldenring_obs = np.zeros((1, _90 + _8 * 2, 1))
@@ -53,6 +56,7 @@ class GuldenringWrapperForIANEnv(IANEnv):
             guldenring_obs[0, _90 + n_wpt * 2:_90 + n_wpt * 2 + 2, 0] = robotstate[:2]
         # Discretize to a resolution of 5cm.
         guldenring_obs = np.round(np.divide(guldenring_obs, 0.05))*0.05
+        # print(guldenring_obs)
         return guldenring_obs
 
     def _convert_action(self, guldenring_action):
@@ -75,7 +79,7 @@ class GuldenringWrapperForIANEnv(IANEnv):
         return guldenring_obs
 
     def render(self, *args, **kwargs):
-        lidar_angles_downsampled = np.linspace(-np.pi, np.pi, _90) \
+        lidar_angles_downsampled = np.linspace(0, 2* np.pi, _90) \
             + self.iarlenv.rlenv.virtual_peppers[0].pos[2]
         kwargs["lidar_angles_override"] = lidar_angles_downsampled
         kwargs["lidar_scan_override"] = self.last_guldenring_scan

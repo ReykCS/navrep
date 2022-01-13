@@ -20,7 +20,7 @@ _8 = 8  # number of guldenrings waypoints
 
 class Rosnav2CPolicy():
     def __init__(self, path=""):
-        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnavnavreptrainenv_2021_12_16__20_01_31_PPO_ROSNAV_VCARCH_C64_ckpt"))  # noqa
+        self.model = PPO2.load(os.path.join("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/tb3"))  # noqa
 
     def act(self, obs):
         action, _state = self.model.predict(obs, deterministic=True)

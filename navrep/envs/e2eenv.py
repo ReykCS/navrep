@@ -26,9 +26,11 @@ class FlatLidarAndStateEncoder(object):
     def _get_action(self, action):
         return np.array([action[0], action[1], 0.])
 
-    def _encode_obs(self, obs):
+    def _encode_obs(self, obs, action):
         lidar, state = obs
         e2e_obs = np.concatenate([lidar, state[:5]]).reshape(self._N,1)
+
+        print(state[:5])
         return e2e_obs
 
 class RingsLidarAndStateEncoder(object):

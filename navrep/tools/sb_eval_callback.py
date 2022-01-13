@@ -68,7 +68,7 @@ class NavrepEvalCallback(BaseCallback):
     :param render: (bool) human rendering in the test env
     """
     def __init__(self, eval_env, test_env_fn=None,
-                 n_eval_episodes=20, logpath=None, savepath=None, eval_freq=50000, verbose=0,
+                 n_eval_episodes=20, logpath=None, savepath=None, eval_freq=100000, verbose=0,
                  render=False):
         super(NavrepEvalCallback, self).__init__(verbose)
         # self.model = None  # type: BaseRLModel
@@ -89,7 +89,7 @@ class NavrepEvalCallback(BaseCallback):
         This method will be called by the model after each call to `env.step()`.
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0 or self.n_calls == 1:
+        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0: #or self.n_calls == 1:
             # get episode_statistics
             tic = time.time()
             S = run_k_episodes(self.model, self.eval_env, self.n_eval_episodes)

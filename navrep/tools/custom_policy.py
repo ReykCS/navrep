@@ -9,6 +9,17 @@ _64 = 64
 _C = 64  # controller FC layer size
 ARCH = "VCARCH"
 
+# (?, 1083, 1) (?, 2)
+# (?, 269, 32)
+# (?, 66, 64)
+# (?, 16, 128)
+# (?, 4, 256)
+# (?, 32) (?, 2)
+# E (?, 32) (?, 34)
+# F (?, 64)
+# V (?, 1)
+
+
 # Custom MLP policy of three layers of size 128 each for the actor and 2 layers of 32 for the critic,
 # with a nature_cnn feature extractor
 class Custom1DPolicy(ActorCriticPolicy):
@@ -21,6 +32,7 @@ class Custom1DPolicy(ActorCriticPolicy):
 
             x = self.processed_obs[:, :-_RS]
             state_features = tf.reshape(self.processed_obs[:, -_RS:], (-1, _RS))
+
 
             h = tf.layers.conv1d(
                 x, 32, 8, strides=4, activation=tf.nn.relu, name="enc_conv1"
@@ -53,6 +65,7 @@ class Custom1DPolicy(ActorCriticPolicy):
                 self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01)
 
         self._value_fn = value_fn
+
         self._setup_init()
 
     def step(self, obs, state=None, mask=None, deterministic=False):

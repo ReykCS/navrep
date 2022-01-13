@@ -12,17 +12,17 @@ from navrep.tools.commonargs import parse_common_args
 from navrep.envs.ianenv import IANEnv
 from navrep.scripts.cross_test_navreptrain_in_ianenv import run_test_episodes
 
-import os, sys, navrep
+# import os, sys, navrep
 
-import navrep.scripts.custom_policy as cp
+# import navrep.scripts.custom_policy as cp
 
-# from arena_local_planner_drl import *
+# # from arena_local_planner_drl import *
 
-sys.modules["arena_navigation"] = navrep
-sys.modules["arena_navigation.arena_local_planner"] = navrep
-sys.modules["arena_navigation.arena_local_planner.learning_based"] = navrep
-sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl"] = navrep
-sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl.scripts.custom_policy"] = cp
+# sys.modules["arena_navigation"] = navrep
+# sys.modules["arena_navigation.arena_local_planner"] = navrep
+# sys.modules["arena_navigation.arena_local_planner.learning_based"] = navrep
+# sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl"] = navrep
+# sys.modules["arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl.scripts.custom_policy"] = cp
 
 
 # constants. If you change these, think hard about what which assumptions break.
@@ -30,7 +30,8 @@ _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
     def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_13__13_54_51_rule_00_AGENT_21_tb3"): 
-        self.model = PPO2.load("/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/newModels/" + path)  # noqa
+        self.model = PPO2.load("/home/reyk/navrep/models/gym/" + path)  # noqa
+        # self.model = PPO2.load("/root/src/navrep/models/gym/rosnav/01.09/" + path)  # noqa
         print(self.model.observation_space.shape)
 
     def act(self, obs):
@@ -100,13 +101,15 @@ class RosnavWrapperForIANEnv(IANEnv):
             downsampled[:405] = rotated_scan[135:540]
             downsampled[405:] = rotated_scan[540:945]
 
+            
+
             f = interpolate.interp1d(np.arange(0, 810), downsampled)
-            upsampled = f(np.linspace(0, 810 - 1, 944))
+            upsampled = f(np.linspace(0, 810 - 1, 720))
 
-            lidar = upsampled.reshape((-1, 2))
-            lidar = np.min(lidar, axis=1)
+            # lidar = upsampled.reshape((-1, 2))
+            # lidar = np.min(lidar, axis=1)
 
-            return lidar
+            return upsampled
         if self.encoder == "agv":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
@@ -173,10 +176,10 @@ class RosnavWrapperForIANEnv(IANEnv):
 
 
 models_to_test = [
-    ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt", "tb3"],
-    ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt_best_model", "tb3"],
-    ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt", "jackal"],
-    ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt_best_model", "jackal"]
+    ["tb3_2022_01_12__20_57_20_ckpt_best_model", "tb3"],
+    # ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt_best_model", "tb3"],
+    # ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt", "jackal"],
+    # ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt_best_model", "jackal"]
 ]
 
 if __name__ == '__main__':

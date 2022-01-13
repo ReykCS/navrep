@@ -60,7 +60,7 @@ class RosnavEncoder(object):
     
     def _get_action_space(self, roboter):
         if roboter == "ridgeback":
-            return [self.linear_range[0], 0, self.angular_range[0]], [self.linear_range[1], 0.5, self.angular_range[1]]
+            return [self.linear_range[0], -0.5, self.angular_range[0]], [self.linear_range[1], 0.5, self.angular_range[1]]
 
         return [self.linear_range[0], self.angular_range[0]], [self.linear_range[1], self.angular_range[1]] 
 
@@ -86,6 +86,7 @@ class RosnavEncoder(object):
             downsampled[405:] = rotated_scan[540:945]
 
             f = interpolate.interp1d(np.arange(0, 810), downsampled)
+
             return f(np.linspace(0, 810 - 1, 720))
         if self.encoder == "agv":
             rotated_scan = np.zeros_like(obs)

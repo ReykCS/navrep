@@ -18,7 +18,7 @@ from crowd_nav.policy.network_om import SDOADRL
 from crowd_sim.envs.utils.action import ActionXYRot
 from crowd_sim.envs.utils.info import Collision, CollisionOtherAgent, ReachGoal
 
-PROGRESS_WEIGHT = 1
+PROGRESS_WEIGHT = 0.1
 
 class SDOADRLDummyPolicy(object):
     """ the minimum viable version of a tensorflow-less SDOADRLDummyPolicy which is
