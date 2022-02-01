@@ -5,8 +5,7 @@ bodies: # List of named bodies
     color: [0.2, 0.8, 0.2, 1.0]
     footprints:
       - type: circle
-        radius: 0.113
-        # radius: 0.116042
+        radius: 0.225
         center: [0.0, 0.0]
         layers: ["all"]
         collision: true
@@ -29,28 +28,21 @@ plugins:
     topic: scan
     body: base_footprint
     broadcast_tf: true
-    origin: [0.0, 0.0, 0.0]
-    # range: 3
-    #arena
-    range: 3.5
-    # angle: {min: -3.12413936, max: 3.14159265359, increment: 0.01745}
-    # shifted for arena
-    # angle: {min: 0, max: 6.28319, increment: 0.01745330555}
-    angle: { min: 0, max: 6.28318977356, increment: 0.0175019223243 }
-
-    # noise_std_dev: 0.015
-    # arena
+    origin: [0.08, 0.0, 0.2015] # from: https://github.com/ignc-research/arena-rosnav-3D/blob/main/simulator_setup/robot/rto/urdf/rto.urdf.xacro
+    range: 50
+    angle: { min: -2.39983, max: 2.39983, increment: 0.0087 } # (2.0944*2/683); 683 = samples (from: https://github.com/ignc-research/arena-rosnav-3D/blob/476f3106a46390324749d41ca6e81d4ee4f462bb/simulator_setup/robot/rto/urdf/sensors/hokuyo.urdf.xacro#L54)
     noise_std_dev: 0.0
-    update_rate: 50
+    update_rate: 10
 
   - type: ModelTfPublisher
     name: tf_publisher
     publish_tf_world: false
-    # exclude: ["approx_footprint"]
 
 robot:
   continuous_actions:
-    linear_range: [0, 0.22] # Maximum translational velocity in m/s
-    angular_range: [-2.84, 2.84] # Maximum rotational velocity in m/s
+    linear_range:
+      x: [-2.78, 2.78] # Maximum translational velocity in m/s
+      y: [-2.78, 2.78] # Maximum translational velocity in m/s
+    angular_range: [-1.0, 1.0] # Maximum rotational velocity in m/s
 
-isHolonomic: false
+isHolonomic: true

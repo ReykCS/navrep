@@ -30,7 +30,7 @@ _1080 = 1080  # navrep scan size
 
 class RosnavCPolicy():
     def __init__(self, path="/home/reyk/Schreibtisch/Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/rosnav_2021_12_13__13_54_51_rule_00_AGENT_21_tb3"): 
-        self.model = PPO2.load("/home/reyk/navrep/models/gym/" + path)  # noqa
+        self.model = PPO2.load("/home/reyk/navrep/models/gym/" + path ) # Uni/VIS/catkin_navrep/src/navrep/models/gym/rosnav/01.13/" + path)  # noqa
         # self.model = PPO2.load("/root/src/navrep/models/gym/rosnav/01.09/" + path)  # noqa
         print(self.model.observation_space.shape)
 
@@ -150,7 +150,7 @@ class RosnavWrapperForIANEnv(IANEnv):
         if self.encoder == "ridgeback":
             return np.array(action)
 
-        return np.array([action[0], 0, action[1]])
+        return np.array([action[0], 0, action[1]]) #, 0]) # 0, action[1]])
 
     def _convert_action(self, rosnav_action):
         return self._get_action(rosnav_action)
@@ -176,7 +176,11 @@ class RosnavWrapperForIANEnv(IANEnv):
 
 
 models_to_test = [
-    ["tb3_2022_01_12__20_57_20_ckpt_best_model", "tb3"],
+    ["tb3_2022_01_24__15_09_15_best_model", "tb3"],
+    # ["jackal_latest", "jackal"],
+    # ["tb3_2022_01_13__12_05_53_best_model", "tb3"],
+    # ["tb3_latest", "tb3"],
+    # ["ridgeback_latest", "ridgeback"],
     # ["rosnavnavreptrainenv_2021_12_17__12_53_36_PPO_ROSNAV_tb3_ckpt_best_model", "tb3"],
     # ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt", "jackal"],
     # ["rosnavnavreptrainenv_2021_12_18__17_32_35_PPO_ROSNAV_jackal_ckpt_best_model", "jackal"]

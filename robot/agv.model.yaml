@@ -53,5 +53,7 @@ plugins:
 
 robot:
   continuous_actions:
-    linear_range: [0, 0.5] # Maximum translational velocity in m/s
+    linear_range: [-0.5, 0.5] # Maximum translational velocity in m/s
     angular_range: [-0.5, 0.5] # Maximum rotational velocity in m/s - TODO: from, pos wrong  max_vel_theta: 0.4
+
+isHolonomic: false

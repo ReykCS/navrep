@@ -30,7 +30,6 @@ class FlatLidarAndStateEncoder(object):
         lidar, state = obs
         e2e_obs = np.concatenate([lidar, state[:5]]).reshape(self._N,1)
 
-        print(state[:5])
         return e2e_obs
 
 class RingsLidarAndStateEncoder(object):
@@ -68,13 +67,13 @@ class E2E1DNavRepEnv(NavRepTrainEnv):
     def step(self, action):
         action = np.array([action[0], action[1], 0.])  # no rotation
         obs, reward, done, info = super(E2E1DNavRepEnv, self).step(action)
-        h = self.encoder._encode_obs(obs)
+        h = self.encoder._encode_obs(obs, action)
         return h, reward, done, info
 
     def reset(self):
         self.encoder.reset()
         obs = super(E2E1DNavRepEnv, self).reset()
-        h = self.encoder._encode_obs(obs)
+        h = self.encoder._encode_obs(obs, np.array([0,0,0]))
         return h
 
 class E2ENavRepEnv(NavRepTrainEnv):

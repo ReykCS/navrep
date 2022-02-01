@@ -21,9 +21,9 @@ class RosnavEncoder(object):
         min, max = self._get_action_space(self.encoder)
 
         self.action_space = spaces.Box(
-            low=np.array(min),
-            high=np.array(max),
-            dtype=np.float,
+            low=np.array(min, dtype=np.float32),
+            high=np.array(max, dtype=np.float32),
+            dtype=np.float32,
         )
 
     def setup_by_configuration(
@@ -50,19 +50,21 @@ class RosnavEncoder(object):
                             (laser_angle_max - laser_angle_min)
                             / laser_angle_increment
                         )
-                        + 1
                     )
                     self._laser_max_range = plugin["range"]
 
-            self.linear_range = robot_data["robot"]["continuous_actions"]["linear_range"]
+            self.linear_range_x = robot_data["robot"]["continuous_actions"]["linear_range"]["x"]
+            self.linear_range_y = robot_data["robot"]["continuous_actions"]["linear_range"]["y"]
             self.angular_range = robot_data["robot"]["continuous_actions"]["angular_range"]
-
+            self.is_holonomic = robot_data["isHolonomic"]
     
     def _get_action_space(self, roboter):
-        if roboter == "ridgeback":
-            return [self.linear_range[0], -0.5, self.angular_range[0]], [self.linear_range[1], 0.5, self.angular_range[1]]
+        # return [-1, -3], [1, 3]
 
-        return [self.linear_range[0], self.angular_range[0]], [self.linear_range[1], self.angular_range[1]] 
+        if self.is_holonomic:
+            return [self.linear_range_x[0], self.linear_range_y[0], self.angular_range[0]], [self.linear_range_x[1], self.linear_range_y[1], self.angular_range[1]]
+
+        return [self.linear_range_x[0], self.angular_range[0]], [self.linear_range_x[1], self.angular_range[1]] 
 
     def reset(self):
         pass
@@ -76,6 +78,38 @@ class RosnavEncoder(object):
             downsampled_scan = obs.reshape((-1, lidar_upsampling))
             downsampled_scan = np.min(downsampled_scan, axis=1)
             return downsampled_scan
+        if self.encoder == "rto":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(720)
+            downsampled[:360] = rotated_scan[180:540]
+            downsampled[360:] = rotated_scan[540:900]
+
+            f = interpolate.interp1d(np.arange(0, 720), downsampled)
+
+            return f(np.linspace(0, 720 - 1, 684))
+        if self.encoder == "rto_new_lidar":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(826)
+            downsampled[:413] = rotated_scan[127:540]
+            downsampled[413:] = rotated_scan[540:953]
+
+            f = interpolate.interp1d(np.arange(0, 826), downsampled)
+
+            return f(np.linspace(0, 826 - 1, 552))
+        if self.encoder == "cob4":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            f = interpolate.interp1d(np.arange(0, 1080), rotated_scan)
+
+            return f(np.linspace(0, 1080 - 1, 720))
         if self.encoder == "jackal" or self.encoder == "ridgeback":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
@@ -109,17 +143,17 @@ class RosnavEncoder(object):
     def _encode_obs(self, obs):
         lidar, state = obs
 
-        new_lidar = [np.min([self.laser_range, i]) for i in self._get_observation_from_scan(lidar)]
+        new_lidar = np.minimum(self.laser_range, self._get_observation_from_scan(lidar)) # self._get_observation_from_scan(lidar)]
         rho, theta = self._get_goal_pose_in_robot_frame(state[:2])
 
         obs = np.concatenate([new_lidar, [rho, theta]]).reshape(self._laser_num_beams + 2, 1)
         return obs
 
     def _get_action(self, action):
-        if self.encoder == "ridgeback":
+        if self.is_holonomic:
             return np.array(action)
 
-        return np.array([action[0], 0, action[1]])
+        return np.array([action[0], 0, action[1]]) # , 0])
 
     def _encode_action(self, action):
         new_action = self._get_action(action)
@@ -130,10 +164,7 @@ class RosnavNavRepEnv(NavRepTrainEnv):
     """ takes a (2) action as input
     outputs encoded obs (1085) """
     def __init__(self, encoder="tb3", *args, **kwargs):
-        if encoder == "e2e":
-            self.encoder = FlatLidarAndStateEncoder()
-        else:
-            self.encoder = RosnavEncoder(encoder=encoder)
+        self.encoder = RosnavEncoder(encoder=encoder)
         super(RosnavNavRepEnv, self).__init__(*args, **kwargs)
         self.action_space = self.encoder.action_space
         self.observation_space = self.encoder.observation_space

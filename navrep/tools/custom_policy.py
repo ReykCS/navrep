@@ -4,21 +4,10 @@ from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.common.tf_layers import conv, linear, conv_to_fc
 
 _Z = 32
-_RS = 5
+_RS = 2
 _64 = 64
 _C = 64  # controller FC layer size
 ARCH = "VCARCH"
-
-# (?, 1083, 1) (?, 2)
-# (?, 269, 32)
-# (?, 66, 64)
-# (?, 16, 128)
-# (?, 4, 256)
-# (?, 32) (?, 2)
-# E (?, 32) (?, 34)
-# F (?, 64)
-# V (?, 1)
-
 
 # Custom MLP policy of three layers of size 128 each for the actor and 2 layers of 32 for the critic,
 # with a nature_cnn feature extractor
