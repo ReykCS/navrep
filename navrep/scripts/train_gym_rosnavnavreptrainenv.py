@@ -8,7 +8,7 @@ from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv
 from navrep.envs.rosnavencoder import RosnavNavRepEnv
 from navrep.tools.sb_eval_callback import NavrepEvalCallback
 from navrep.tools.commonargs import parse_common_args
-from navrep.tools.rosnav_policy import AgvPolicy, RidgebackPolicy, RtoNewLidarPolicy, RtoPolicy, Cob4Policy
+from navrep.tools.rosnav_policy import AgvPolicy, RidgebackPolicy, RtoNewLidarPolicy, RtoPolicy, Cob4Policy, YoubotPolicy
 
 
 roboters = [
@@ -16,6 +16,10 @@ roboters = [
     # "name": "tb3",
     # "policy": TB3Policy
 # }, 
+{
+    "name": "youbot",
+    "policy": YoubotPolicy
+},
 {
     "name": "cob4",
     "policy": Cob4Policy

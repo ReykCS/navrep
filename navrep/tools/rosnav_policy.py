@@ -101,3 +101,7 @@ class RtoPolicy(RosnavPolicy):
 class RtoNewLidarPolicy(RosnavPolicy):
     def get_layer_size(self):
         return 1
+
+class YoubotPolicy(RosnavPolicy):
+    def get_layer_size(self):
+        return 1

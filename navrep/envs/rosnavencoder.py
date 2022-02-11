@@ -122,6 +122,18 @@ class RosnavEncoder(object):
             f = interpolate.interp1d(np.arange(0, 810), downsampled)
 
             return f(np.linspace(0, 810 - 1, 720))
+        if self.encoder == "youbot":
+            rotated_scan = np.zeros_like(obs)
+            rotated_scan[:540] = obs[540:]
+            rotated_scan[540:] = obs[:540]
+
+            downsampled = np.zeros(540)
+            downsampled[:270] = rotated_scan[270:540]
+            downsampled[270:] = rotated_scan[540:810]
+
+            f = interpolate.interp1d(np.arange(0, 540), downsampled)
+
+            return f(np.linspace(0, 540 - 1, 512))
         if self.encoder == "agv":
             rotated_scan = np.zeros_like(obs)
             rotated_scan[:540] = obs[540:]
